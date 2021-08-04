@@ -9,20 +9,27 @@ class WebCrawler():
         self.visitedUrls = set()   
         FileSystem(self.dir_name)
 
-    def get_page(self, url):
-        page_html_content = self.get_html_content(url)
-        page_links = self.get_links(page_html_content)
-        if (len(page_links)>0):
-            for i in page_links:
-                self.get_page(i)
-        return None
+    def set_page(self, url):
+        self.page_url = url
+
+    def get_page(self):
+        try:
+            page_html_content = self.get_html_content()
+            page_links = self.get_links(page_html_content)
+            if (len(page_links)>0):
+                for i in page_links:
+                    self.get_page(i)
+            return None
+        except Exception as e:
+            print(e)
+            return None
 
     def save_page_content(self, content, path):
         FileSystem.save_page(self,content,path)
 
-    def get_html_content(self,url):    
+    def get_html_content(self):    
         try:    
-            html = requests.get(url)
+            html = requests.get(self.page_url)
         except Exception as e:    
             print(e)    
             return ""    

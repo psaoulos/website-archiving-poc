@@ -8,7 +8,12 @@ class FileSystem():
 
     def make_folders(self):
         # Create directory
-        os.chdir("../crawler/archive")
+        try:
+            os.mkdir("./archive")
+            print("Directory " , "./crawler/archive" ,  " Created ") 
+        except FileExistsError:
+            print("Directory " , "./crawler/archive" ,  " already exists")
+        os.chdir("./archive")
         try:
             # Create target Directory
             print(self.dir_names)
