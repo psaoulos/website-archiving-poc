@@ -7,12 +7,14 @@ import modules.FileSystem as FileSystem
 
 
 class WebCrawler():
-    def __init__(self, url):
-        self.page_url = url
+    def __init__(self):
+        self.page_url = ""
         self.visitedUrls = set()
+        self.logger = logging.getLogger("crawler_logger")
 
     def set_page(self, url):
         self.page_url = url
+        self.logger.debug(f"Setting root page to crawl: {url}")
         FileSystem.create_page_folder(url)
 
     def get_pages(self):

@@ -10,11 +10,14 @@ from PyInquirer import prompt, print_json
 def main():
     print("Logs at: "+os.getcwd()+"/logs/app.log")
     FileSystem.init_folders()
-    answers = ask_for_url()
-    print(answers)  # use the answers as input for your app
-    myCrawler = WebCrawler("")
-    if answers["site_addr"] != "":
-        myCrawler.set_page(answers["site_addr"])
+
+    myCrawler = WebCrawler()
+    if "WEBPAGE_URL" in os.environ:
+        webpage = os.getenv('WEBPAGE_URL')
+        if webpage is not None:
+            myCrawler.set_page(webpage)
+        else:
+            myCrawler.set_page("http://www.in.gr/")
     else:
         myCrawler.set_page("http://www.in.gr/")
     starttime = time.time()

@@ -3,6 +3,7 @@ services:
   crawler:
     build: crawler
     image: crawler
+    user: $USER_ID:$GROUP_ID
     ports:
       - "80:80"
     env_file:
