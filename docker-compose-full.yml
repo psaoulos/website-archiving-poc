@@ -1,0 +1,28 @@
+version: '3.0'
+services:
+  crawler:
+    build: crawler
+    image: crawler
+    ports:
+      - "80:80"
+    env_file:
+      - .env
+    volumes:
+        - ./crawler:/usr/src/app/archive
+  mariadb:
+    image: mariadb
+    restart: always
+    volumes:
+      - ./database:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: notSecureChangeMe
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8080:80
+    environment:
+      - PMA_ARBITRARY=1
+      - PMA_HOST=mariadb
+    depends_on:
+      - mariadb
