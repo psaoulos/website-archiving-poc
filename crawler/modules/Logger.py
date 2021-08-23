@@ -14,7 +14,6 @@ def get_logger_lever(value):
 
 
 def init_logger():
-    print("Going to create a logger now...")
     if "CH_LEVEL" in os.environ:
         ch_level = get_logger_lever(os.getenv('CH_LEVEL'))
     else:
@@ -27,7 +26,7 @@ def init_logger():
     logger.setLevel(ch_level)
     # Format for our loglines
     formatter = logging.Formatter(
-        "%(asctime)s - %(levelname)s - %(message)s")
+        "%(asctime)s %(funcName)s - %(levelname)s - %(message)s")
     # Setup console logging
     ch = logging.StreamHandler()
     ch.setLevel(ch_level)

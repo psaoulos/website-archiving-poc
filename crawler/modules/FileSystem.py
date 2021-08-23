@@ -53,4 +53,4 @@ def save_page(content, file_name, url):
     f.write(str(content))
     f.close()
     os.chdir(root_dir)
-    Logger.get_logger().debug(f"{name}.html saved.")
+    Logger.get_logger().debug(f"{name} snaphot saved.")
