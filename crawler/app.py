@@ -1,25 +1,30 @@
 from __future__ import print_function, unicode_literals
 import os
-import logging
 import time
 from modules.WebCrawler import WebCrawler
 import modules.FileSystem as FileSystem
+import modules.Logger as Logger
 from PyInquirer import prompt, print_json
 
 
 def main():
-    print("Logs at: "+os.getcwd()+"/logs/app.log")
     FileSystem.init_folders()
 
     myCrawler = WebCrawler()
     if "WEBPAGE_URL" in os.environ:
+        logger.debug("Using WEBPAGE_URL env var.")
         webpage = os.getenv('WEBPAGE_URL')
         if webpage is not None:
-            myCrawler.set_page(webpage)
+            if webpage.startswith("http://") or webpage.startswith("http://"):
+                myCrawler.set_page(webpage)
+            else:
+                myCrawler.set_page(f"http://{webpage}")
         else:
-            myCrawler.set_page("http://www.in.gr/")
+            logger.debug("WEBPAGE_URL env var returned None, defaulting.")
+            myCrawler.set_page("https://www.in.gr/")
     else:
-        myCrawler.set_page("http://www.in.gr/")
+        logger.debug("No WEBPAGE_URL env var found, defaulting.")
+        myCrawler.set_page("https://www.in.gr/")
     starttime = time.time()
     loop_over = True
     while loop_over:  # TODO: add esc key hit listener
@@ -37,31 +42,10 @@ def ask_for_url():
     ]
     return prompt(questions)
 
-
-def init_logger():
-    logger = logging.getLogger("crawler_logger")
-    logger.setLevel(logging.DEBUG)
-    # Format for our loglines
-    formatter = logging.Formatter(
-        "%(asctime)s %(name)s - %(levelname)s - %(message)s")
-    # Setup console logging
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.DEBUG)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-    # Setup file logging as well
-    if not os.path.exists('./logs'):
-        os.makedirs('./logs')
-        logger.info(f"Logs Folder did not exist, creating!")
-    fh = logging.FileHandler("./logs/app.log", mode='w')
-    fh.setLevel(logging.DEBUG)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
-    return logger
-
-
 if __name__ == "__main__":
-    logger = init_logger()
-    logger.debug("Scrypt started!")
+    print("Logs at: "+os.getcwd()+"/logs/app.log")
+    Logger.init_logger()
+    logger = Logger.get_logger()
+    logger.info("Scrypt started!")
     main()
-    logger.debug("Scrypt finished!")
+    logger.info("Scrypt finished!")

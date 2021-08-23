@@ -1,8 +1,8 @@
 import requests
-import logging
 from lxml import html
 import ssl
 from urllib3 import poolmanager
+import modules.Logger as Logger
 import modules.FileSystem as FileSystem
 
 
@@ -10,11 +10,11 @@ class WebCrawler():
     def __init__(self):
         self.page_url = ""
         self.visitedUrls = set()
-        self.logger = logging.getLogger("crawler_logger")
+        self.logger = Logger.get_logger()
 
     def set_page(self, url):
         self.page_url = url
-        self.logger.debug(f"Setting root page to crawl: {url}")
+        self.logger.info(f"Setting root page to crawl: {url}")
         FileSystem.create_page_folder(url)
 
     def get_pages(self):
@@ -37,10 +37,9 @@ class WebCrawler():
 
     def get_html_content(self):
         try:
-            print("scrapping")
             session = requests.session()
             session.mount('https://', TLSAdapter())
-            html = session.get("http://www.in.gr")
+            html = session.get(self.page_url)
         except Exception as e:
             print(e)
             return ""

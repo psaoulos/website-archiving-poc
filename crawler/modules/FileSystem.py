@@ -1,6 +1,6 @@
 from datetime import datetime
 import os
-import logging
+import modules.Logger as Logger
 import time
 
 root_dir = os.getcwd()
@@ -9,9 +9,9 @@ def init_folders():
     # Create directory
     try:
         os.mkdir("./archive")
-        print("Directory ", "./crawler/archive",  " Created ")
+        Logger.get_logger().debug("Directory ./crawler/archive Created.")
     except FileExistsError:
-        print("Directory ", "./crawler/archive",  " already exists")
+        Logger.get_logger().debug("Directory ./crawler/archive already exists.")
 
 
 def get_os_friendly_name(url):
@@ -29,9 +29,9 @@ def create_page_folder(url):
     try:
         # Create target Directory
         os.mkdir(dir_name)
-        print("Directory ", dir_name,  " Created ")
+        Logger.get_logger().debug(f"Directory {dir_name} Created.")
     except FileExistsError:
-        print("Directory ", dir_name,  " already exists")
+        Logger.get_logger().debug(f"Directory {dir_name} already exists.")
     os.chdir(root_dir)
 
 
@@ -41,7 +41,7 @@ def make_day_folder(url):
         try:
             os.mkdir(subDirName)
         except FileExistsError:
-            print(f"{subDirName} Sub-Folder exists!")
+            Logger.get_logger().debug(f"{subDirName} Sub-Folder exists!")
         os.chdir(subDirName)
 
 
@@ -53,3 +53,4 @@ def save_page(content, file_name, url):
     f.write(str(content))
     f.close()
     os.chdir(root_dir)
+    Logger.get_logger().debug(f"{name}.html saved.")
