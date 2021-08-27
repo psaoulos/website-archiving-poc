@@ -9,14 +9,16 @@ services:
     env_file:
       - .env
     volumes:
-        - ./crawler:/usr/src/app/archive
+      - ./crawler:/usr/src/app
+    depends_on:
+      - mariadb
   mariadb:
     image: mariadb
     restart: always
     volumes:
       - ./database:/var/lib/mysql
-    environment:
-      MYSQL_ROOT_PASSWORD: notSecureChangeMe
+    env_file:
+      - .env
   phpmyadmin:
     image: phpmyadmin
     restart: always

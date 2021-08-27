@@ -3,6 +3,7 @@ import os
 import time
 from modules.WebCrawler import WebCrawler
 import modules.FileSystem as FileSystem
+import modules.Database as Database
 import modules.Logger as Logger
 
 
@@ -28,7 +29,9 @@ def main():
     starttime = time.time()
     loop_over = False
 
+    Database.init_database()
     myCrawler.get_root_page()
+
     while loop_over:  # TODO: add esc key hit listener
         time.sleep(60.0 - ((time.time() - starttime) % 60.0))
 
