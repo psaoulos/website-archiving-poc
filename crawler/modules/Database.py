@@ -15,11 +15,30 @@ def connect_to_db():
             port=Variables.MARIADB_PORT,
             database=Variables.MARIADB_DATABASE
         )
+        if not check_user_permissions(dbcon):
+            Logger.get_logger().error(f"{Variables.MARIADB_USER} does not have all permissions on {Variables.MARIADB_DATABASE}, please check env variables as specified on readme.")
+            dbcon.close()
+            sys.exit(1)
+        else:
             return dbcon
     except mariadb.Error as e:
         Logger.get_logger().error(f"Error connecting to MariaDB Platform: {e}")
         sys.exit(1)
 
+def check_user_permissions(dbcon):
+    dbcur = dbcon.cursor()
+    dbcur.execute("SHOW GRANTS FOR CURRENT_USER")
+    row = dbcur.fetchone()
+    all_permissions = False
+    while row is not None:
+        permission = row[0]
+        permission = permission.replace('`', '')
+        permission = permission.replace('\\', '')
+        if f"GRANT ALL PRIVILEGES ON {Variables.MARIADB_DATABASE}.* TO {Variables.MARIADB_USER}@" in permission:
+            all_permissions = True
+        row = dbcur.fetchone()
+    dbcur.close()
+    return all_permissions
 
 
 def check_if_table_exists(dbcon, tablename):
