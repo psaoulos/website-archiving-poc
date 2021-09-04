@@ -5,16 +5,16 @@ from urllib3 import poolmanager
 import modules.Logger as Logger
 import modules.FileSystem as FileSystem
 
+logger = Logger.get_logger()
 
 class WebCrawler():
     def __init__(self):
         self.page_url = ""
         self.visitedUrls = set()
-        self.logger = Logger.get_logger()
 
     def set_page(self, url):
         self.page_url = url
-        self.logger.info(f"Setting root page to crawl: {url}")
+        logger.info(f"Setting root page to crawl: {url}")
         FileSystem.create_page_folder(url)
 
     def get_root_page(self):
@@ -25,7 +25,7 @@ class WebCrawler():
             self.save_page_content(content=page_html_content, file_name=self.page_url, url=self.page_url)
             page_links = self.get_links(page_html_content)
         except Exception as e:
-            self.logger.error(e)
+            logger.error(e)
 
     def save_page_content(self, content, file_name, url):
         FileSystem.save_page(
@@ -35,7 +35,7 @@ class WebCrawler():
         element_tree = html.fromstring(page_html_content)
         element_tree.make_links_absolute(self.page_url, resolve_base_href=True)
         links = list(element_tree.iterlinks())
-        self.logger.debug(f"Found {len(links)} links under {self.page_url}. Going to clean.")
+        logger.debug(f"Found {len(links)} links under {self.page_url}. Going to clean.")
         clean_list = list()
         for link in links:
             # Returns every link found in page, Contains images too (src)
@@ -43,7 +43,7 @@ class WebCrawler():
             if link[1] == "href":
                 if link[2].startswith(self.page_url):
                     clean_list.append(link[2])
-        self.logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
+        logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
 
     def get_html_content(self, url):
@@ -52,7 +52,7 @@ class WebCrawler():
             session.mount("https://", TLSAdapter())
             html = session.get(url)
         except Exception as e:
-            self.logger.error(e)
+            logger.error(e)
             return ""
         return html.content.decode("UTF-8")
 
@@ -65,10 +65,10 @@ class WebCrawler():
             session.mount("https://", TLSAdapter())
             html = session.get(self.page_url)
         except Exception as e:
-            self.logger.error(e)
+            logger.error(e)
             return ""
         if html.url != self.page_url:
-            self.logger.info(f"Original url redirects to {html.url}, updating root url.")
+            logger.info(f"Original url redirects to {html.url}, updating root url.")
             self.page_url = html.url
 
 class TLSAdapter(requests.adapters.HTTPAdapter):

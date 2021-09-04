@@ -3,15 +3,16 @@ import os
 import modules.Logger as Logger
 import time
 
+logger = Logger.get_logger()
 root_dir = os.getcwd()
 
 def init_folders():
     # Create directory
     try:
         os.mkdir("./archive")
-        Logger.get_logger().debug("Directory ./crawler/archive Created.")
+        logger.debug("Directory ./crawler/archive Created.")
     except FileExistsError:
-        Logger.get_logger().debug("Directory ./crawler/archive already exists.")
+        logger.debug("Directory ./crawler/archive already exists.")
 
 
 def get_os_friendly_name(url):
@@ -29,9 +30,9 @@ def create_page_folder(url):
     try:
         # Create target Directory
         os.mkdir(dir_name)
-        Logger.get_logger().debug(f"Directory {dir_name} Created.")
+        logger.debug(f"Directory {dir_name} Created.")
     except FileExistsError:
-        Logger.get_logger().debug(f"Directory {dir_name} already exists.")
+        logger.debug(f"Directory {dir_name} already exists.")
     os.chdir(root_dir)
 
 
@@ -41,7 +42,7 @@ def make_day_folder(url):
         try:
             os.mkdir(subDirName)
         except FileExistsError:
-            Logger.get_logger().debug(f"{subDirName} Sub-Folder exists!")
+            logger.debug(f"{subDirName} Sub-Folder exists!")
         os.chdir(subDirName)
 
 
@@ -53,4 +54,4 @@ def save_page(content, file_name, url):
     f.write(str(content))
     f.close()
     os.chdir(root_dir)
-    Logger.get_logger().debug(f"{name} snaphot saved.")
+    logger.debug(f"{name} snaphot saved.")

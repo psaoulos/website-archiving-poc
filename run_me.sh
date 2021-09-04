@@ -13,7 +13,8 @@ then
 fi
 
 # if .env file exists ask user to confirm .env stated url
-if [ -z ${WEBPAGE_URL+x} ]; 
+# -z is used to check for zero length
+if [ -z "${WEBPAGE_URL}" ]; 
 then 
     ask_user=true;
 else 
@@ -36,11 +37,16 @@ do
             Yes ) 
                 if $env_exists;
                 then
-                    # update .env file with new url
-                    sed -i -e "s*$WEBPAGE_URL*$new_webpage*g" $FILE
+                    if !([ -z "${WEBPAGE_URL}" ]); 
+                    then 
+                        sed -i -e "s*$WEBPAGE_URL*$new_webpage*g" $FILE
+                    else 
+                        printf 'WEBPAGE_URL="'$new_webpage'"\n' >> $FILE
+                    fi
                 else
-                    # since .env does not exist export it
-                    export WEBPAGE_URL=$new_webpage;
+                    # since .env does not exist create it
+                    printf 'WEBPAGE_URL="'$new_webpage'"\n' >> $FILE
+                    source .env
                 fi
                 ask_user=false; 
                 break;;
@@ -57,14 +63,6 @@ mkdir -p database
 # docker container stop $(docker container ls -aq)
 # docker rm $(docker ps -a -q)
 
-# deploy
-if $env_exists;
-then
-    echo "Starting crawler for $new_webpage!"
-    docker-compose -f docker-compose-full.yml build && docker-compose -f docker-compose-full.yml up
-    # docker-compose -f docker-compose-full.yml build && docker-compose -f docker-compose-full.yml up
-else
 echo "Starting crawler for $WEBPAGE_URL!"
-    docker-compose -f docker-compose-full.yml build && WEBPAGE_URL=$WEBPAGE_URL docker-compose -f docker-compose-full.yml up
-    # docker-compose -f docker-compose-full.yml build && docker-compose -f docker-compose-full.yml up
-fi
+docker-compose -f docker-compose-full.yml build && WEBPAGE_URL=$WEBPAGE_URL docker-compose -f docker-compose-full.yml up
+# docker-compose -f docker-compose-full.yml build && docker-compose -f docker-compose-full.yml up
