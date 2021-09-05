@@ -23,6 +23,7 @@ def connect_to_db():
                 host=Variables.MARIADB_IP,
                 port=Variables.MARIADB_PORT,
                 database=Variables.MARIADB_DATABASE,
+                autocommit=False,
                 connect_timeout=2
             )
             if not check_user_permissions(dbcon):
@@ -79,11 +80,27 @@ def init_database():
     try:
         if not check_if_table_exists(dbcon,"links_table"):
             logger.debug(f"links_table table did not exist, creating.")
-            dbcur.execute("CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, checkedOn TIMESTAMP)")
+            dbcur.execute("CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, primary key(link))")
     except mariadb.Error as e:
         logger.error(f"Error creating table: {e}")
         dbcur.close()
         dbcon.close()
         sys.exit(1)
+    dbcur.close()
+    dbcon.close()
+
+def insert_links_found(links):
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        # Using IGNORE to pass duplicate links
+        dbcur.executemany(f"INSERT IGNORE INTO {Variables.MARIADB_DATABASE}.links_table(link, checked) VALUES (?, ?)",
+            (links))
+        rowcount = dbcur.rowcount
+        logger.debug(f"Inserted {rowcount} links to DB.")
+        dbcon.commit()
+    except Exception as e:
+        logger.error(f"Error committing insert_links_found transaction: {e}")
+        dbcon.rollback()
     dbcur.close()
     dbcon.close()

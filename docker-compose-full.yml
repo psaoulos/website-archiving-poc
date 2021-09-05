@@ -11,7 +11,8 @@ services:
     volumes:
       - ./crawler:/usr/src/app
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy
   mariadb:
     image: mariadb
     restart: always
@@ -19,6 +20,11 @@ services:
       - ./database:/var/lib/mysql
     env_file:
       - .env
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      interval: 4s
+      timeout: 2s
+      retries: 5
   phpmyadmin:
     image: phpmyadmin
     restart: always
@@ -28,4 +34,5 @@ services:
       - PMA_ARBITRARY=1
       - PMA_HOST=mariadb
     depends_on:
-      - mariadb
+      mariadb:
+        condition: service_healthy

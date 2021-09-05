@@ -3,6 +3,7 @@ from lxml import html
 import ssl
 from urllib3 import poolmanager
 import modules.Logger as Logger
+import modules.Database as Database
 import modules.FileSystem as FileSystem
 
 logger = Logger.get_logger()
@@ -24,6 +25,7 @@ class WebCrawler():
             page_html_content = self.get_html_content(self.page_url)
             self.save_page_content(content=page_html_content, file_name=self.page_url, url=self.page_url)
             page_links = self.get_links(page_html_content)
+            Database.insert_links_found(page_links)
         except Exception as e:
             logger.error(e)
 
@@ -42,7 +44,7 @@ class WebCrawler():
             # (<Element a at 0x7fa00824cbd0>, 'href', 'http://www.in.gr/epikoinonia/', 0)
             if link[1] == "href":
                 if link[2].startswith(self.page_url):
-                    clean_list.append(link[2])
+                    clean_list.append((link[2],False))
         logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
 
