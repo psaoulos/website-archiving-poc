@@ -1,7 +1,8 @@
-import requests
-from lxml import html
+""" The core webcrawler functionality. """
 import ssl
 from urllib3 import poolmanager
+import requests
+from lxml import html
 import modules.Logger as Logger
 import modules.Database as Database
 import modules.FileSystem as FileSystem
@@ -11,7 +12,7 @@ logger = Logger.get_logger()
 class WebCrawler():
     def __init__(self):
         self.page_url = ""
-        self.visitedUrls = set()
+        self.visited_urls = set()
 
     def set_page(self, url):
         self.page_url = url
@@ -44,7 +45,7 @@ class WebCrawler():
             # (<Element a at 0x7fa00824cbd0>, 'href', 'http://www.in.gr/epikoinonia/', 0)
             if link[1] == "href":
                 if link[2].startswith(self.page_url):
-                    clean_list.append((link[2],False))
+                    clean_list.append((link[2], False))
         logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
 
@@ -52,11 +53,11 @@ class WebCrawler():
         try:
             session = requests.session()
             session.mount("https://", TLSAdapter())
-            html = session.get(url)
-        except Exception as e:
-            logger.error(e)
+            page_html = session.get(url)
+        except Exception as ex:
+            logger.error(ex)
             return ""
-        return html.content.decode("UTF-8")
+        return page_html.content.decode("UTF-8")
 
     def check_page_protocol(self):
         """
