@@ -1,13 +1,9 @@
-import os
 import sys
-import re
 import mariadb
-import modules.Logger as Logger
-import modules.Variables as Variables
-import modules.General as General
-import modules.CustomExceptions as CustomExceptions
+from modules import Logger, Variables, CustomExceptions
 
 logger = Logger.get_logger()
+env_variables = Variables()
 # Used to denote if 3 consecutive connections could not be established, in that case no further connection attempts 
 # will be made in order for the crawler not to hung at every connection attempt
 problem_connecting = False
@@ -18,16 +14,16 @@ def connect_to_db():
     try:
         if problem_connecting is False:
             dbcon = mariadb.connect(
-                user=Variables.MARIADB_USER,
-                password=Variables.MARIADB_PASSWORD,
-                host=Variables.MARIADB_IP,
-                port=Variables.MARIADB_PORT,
-                database=Variables.MARIADB_DATABASE,
+                user=env_variables.get_env_var("MARIADB_USER"),
+                password=env_variables.get_env_var("MARIADB_PASSWORD"),
+                host=env_variables.get_env_var("MARIADB_IP"),
+                port=env_variables.get_env_var("MARIADB_PORT"),
+                database=env_variables.get_env_var("MARIADB_DATABASE"),
                 autocommit=False,
                 connect_timeout=2
             )
             if not check_user_permissions(dbcon):
-                logger.error(f"{Variables.MARIADB_USER} does not have all permissions on {Variables.MARIADB_DATABASE}, please check env variables as specified on readme.")
+                logger.error(f"{env_variables.get_env_var('MARIADB_USER')} does not have all permissions on {env_variables.get_env_var('MARIADB_DATABASE')}, please check env variables as specified on readme.")
                 dbcon.close()
                 sys.exit(1)
             else:
@@ -50,7 +46,7 @@ def check_user_permissions(dbcon):
         permission = row[0]
         permission = permission.replace('`', '')
         permission = permission.replace('\\', '')
-        if f"GRANT ALL PRIVILEGES ON {Variables.MARIADB_DATABASE}.* TO {Variables.MARIADB_USER}@" in permission:
+        if f"GRANT ALL PRIVILEGES ON {env_variables.get_env_var('MARIADB_DATABASE')}.* TO {env_variables.get_env_var('MARIADB_USER')}@" in permission:
             all_permissions = True
         row = dbcur.fetchone()
     dbcur.close()
@@ -94,7 +90,7 @@ def insert_links_found(links):
     dbcur = dbcon.cursor()
     try:
         # Using IGNORE to pass duplicate links
-        dbcur.executemany(f"INSERT IGNORE INTO {Variables.MARIADB_DATABASE}.links_table(link, checked) VALUES (?, ?)",
+        dbcur.executemany(f"INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}.links_table(link, checked) VALUES (?, ?)",
             (links))
         rowcount = dbcur.rowcount
         logger.debug(f"Inserted {rowcount} links to DB.")

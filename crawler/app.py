@@ -2,15 +2,17 @@
 from __future__ import print_function, unicode_literals
 import os
 import time
-from modules import WebCrawler, Logger, Variables, FileSystem, Database
+from modules import WebCrawler, Variables, Database, FileSystem, Logger
 
 def main():
     """ Main app function. """
     FileSystem.init_folders()
 
-    Variables.init_variables_from_env()
-    my_crawler = WebCrawler.WebCrawler()
-    my_crawler.set_page(Variables.WEBPAGE_URL)
+    env_variables = Variables()
+    env_variables.init_variables_from_env()
+
+    my_crawler = WebCrawler()
+    my_crawler.set_page(env_variables.get_env_var("WEBPAGE_URL"))
 
     starttime = time.time()
     loop_over = False
