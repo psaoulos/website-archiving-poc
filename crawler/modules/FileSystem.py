@@ -1,7 +1,8 @@
 from datetime import datetime
 import os
-import modules.Logger as Logger
+from modules import Logger
 import time
+
 
 logger = Logger.get_logger()
 root_dir = os.getcwd()

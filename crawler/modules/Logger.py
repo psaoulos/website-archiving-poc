@@ -1,7 +1,6 @@
 import os
 import logging
 
-
 def get_logger_lever(value):
     return {
         'NOTSET': logging.NOTSET,

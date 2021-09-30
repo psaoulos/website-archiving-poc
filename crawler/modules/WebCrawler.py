@@ -3,9 +3,7 @@ import ssl
 from urllib3 import poolmanager
 import requests
 from lxml import html
-import modules.Logger as Logger
-import modules.Database as Database
-import modules.FileSystem as FileSystem
+from modules import Logger, FileSystem, Database
 
 logger = Logger.get_logger()
 

@@ -1,6 +1,5 @@
 import os
-import modules.Logger as Logger
-
+from modules import Logger
 
 def is_docker():
     path = '/proc/self/cgroup'
