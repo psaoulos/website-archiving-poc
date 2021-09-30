@@ -1,30 +1,25 @@
+""" Entry file for application. """
 from __future__ import print_function, unicode_literals
 import os
 import time
-import modules.Logger as Logger
-from modules.WebCrawler import WebCrawler
-import modules.Variables as Variables
-import modules.FileSystem as FileSystem
-import modules.Database as Database
-
+from modules import WebCrawler, Logger, Variables, FileSystem, Database
 
 def main():
+    """ Main app function. """
     FileSystem.init_folders()
 
     Variables.init_variables_from_env()
-    myCrawler = WebCrawler()
-    myCrawler.set_page(Variables.WEBPAGE_URL)
+    my_crawler = WebCrawler.WebCrawler()
+    my_crawler.set_page(Variables.WEBPAGE_URL)
 
     starttime = time.time()
     loop_over = False
 
     Database.init_database()
-    myCrawler.get_root_page()
+    my_crawler.get_root_page_links()
 
-    while loop_over:  # TODO: add esc key hit listener
+    while loop_over:
         time.sleep(60.0 - ((time.time() - starttime) % 60.0))
-
-
 
 if __name__ == "__main__":
     print("Logs at: "+os.getcwd()+"/logs/app.log")

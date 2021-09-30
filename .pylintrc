@@ -120,7 +120,8 @@ disable=print-statement,
         import-error,
         arguments-differ,
         logging-fstring-interpolation,
-        broad-except
+        broad-except,
+        too-many-branches
 
 
 [REPORTS]

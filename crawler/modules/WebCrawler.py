@@ -1,4 +1,4 @@
-""" The core webcrawler functionality. """
+""" Module containting the core webcrawler functionality. """
 import ssl
 from urllib3 import poolmanager
 import requests
@@ -10,16 +10,19 @@ import modules.FileSystem as FileSystem
 logger = Logger.get_logger()
 
 class WebCrawler():
+    """ The core webcrawler functionality. """
     def __init__(self):
         self.page_url = ""
         self.visited_urls = set()
 
     def set_page(self, url):
+        """ Setter for the root page of the site to crawl. """
         self.page_url = url
         logger.info(f"Setting root page to crawl: {url}")
         FileSystem.create_page_folder(url)
 
-    def get_root_page(self):
+    def get_root_page_links(self):
+        """ Get and insert to DB all links found on root page. """
         try:
             self.check_page_protocol()
 
@@ -27,14 +30,17 @@ class WebCrawler():
             self.save_page_content(content=page_html_content, file_name=self.page_url, url=self.page_url)
             page_links = self.get_links(page_html_content)
             Database.insert_links_found(page_links)
-        except Exception as e:
-            logger.error(e)
+        except Exception as ex:
+            logger.error(ex)
 
-    def save_page_content(self, content, file_name, url):
+    @staticmethod
+    def save_page_content(content, file_name, url):
+        """ Save page html content to file system. """
         FileSystem.save_page(
             content=content, file_name=file_name, url=url)
-    
+
     def get_links(self, page_html_content):
+        """ Get links from page html content. """
         element_tree = html.fromstring(page_html_content)
         element_tree.make_links_absolute(self.page_url, resolve_base_href=True)
         links = list(element_tree.iterlinks())
@@ -49,7 +55,9 @@ class WebCrawler():
         logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
 
-    def get_html_content(self, url):
+    @staticmethod
+    def get_html_content(url):
+        """ Get raw html content from page url. """
         try:
             session = requests.session()
             session.mount("https://", TLSAdapter())
@@ -66,16 +74,16 @@ class WebCrawler():
         try:
             session = requests.session()
             session.mount("https://", TLSAdapter())
-            html = session.get(self.page_url)
-        except Exception as e:
-            logger.error(e)
-            return ""
-        if html.url != self.page_url:
-            logger.info(f"Original url redirects to {html.url}, updating root url.")
-            self.page_url = html.url
+            page_session = session.get(self.page_url)
+        except Exception as ex:
+            logger.error(ex)
+            return
+        if page_session.url != self.page_url:
+            logger.info(f"Original url redirects to {page_session.url}, updating root url.")
+            self.page_url = page_session.url
 
 class TLSAdapter(requests.adapters.HTTPAdapter):
-    # Used to get content off https pages
+    """ Overriden to get content off https pages. """
     def init_poolmanager(self, connections, maxsize, block=False):
         """Create and initialize the urllib3 PoolManager."""
         ctx = ssl.create_default_context()
