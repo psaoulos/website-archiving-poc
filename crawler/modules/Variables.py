@@ -1,4 +1,4 @@
-""" Module containting class to load env variables. """
+""" Module containting class responsible for loading and handling env variables. """
 import os
 import sys
 from modules import Logger, General
@@ -91,6 +91,7 @@ class Variables():
                     f'MARIADB_DATABASE = "{env_variables["MARIADB_DATABASE"]}"\n'
                 )
                 env_file.write(content)
+                env_file.close()
                 logger.error("Dummy env file Created, Please fill it and copy it to project root folder as .env")
         else:
             logger.error("Please fill env file and copy it to project root folder as .env")

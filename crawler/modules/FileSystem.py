@@ -1,13 +1,14 @@
+""" Module containing all functions responsible for File System manipulation. """
 from datetime import datetime
 import os
 from modules import Logger
-import time
 
 
 logger = Logger.get_logger()
 root_dir = os.getcwd()
 
 def init_folders():
+    """ Creates folder required for application to operate. """
     # Create directory
     try:
         os.mkdir("./archive")
@@ -17,6 +18,7 @@ def init_folders():
 
 
 def get_os_friendly_name(url):
+    """ Helper function to remove convert page url to suitable form in order to name achive folder. """
     if url.startswith('https://'):
         os_friendly_name = url.replace("https://", "")
     else:
@@ -26,6 +28,7 @@ def get_os_friendly_name(url):
 
 
 def create_page_folder(url):
+    """ Creates folder named after page to be crawled over, which contains archived snapshots of said page. """
     os.chdir("./archive")
     dir_name = get_os_friendly_name(url)
     try:
@@ -38,21 +41,23 @@ def create_page_folder(url):
 
 
 def make_day_folder(url):
+    """ Creates a date specific folder to contain archived snapshots of page. """
     if os.getcwd().endswith(f"/archive/{get_os_friendly_name(url)}"):
-        subDirName = datetime.today().strftime('%d-%m-%y')
+        sub_dir_name = datetime.today().strftime('%d-%m-%y')
         try:
-            os.mkdir(subDirName)
+            os.mkdir(sub_dir_name)
         except FileExistsError:
-            logger.debug(f"{subDirName} Sub-Folder exists!")
-        os.chdir(subDirName)
+            logger.debug(f"{sub_dir_name} Sub-Folder exists!")
+        os.chdir(sub_dir_name)
 
 
-def save_page(content, file_name, url):
+def save_page(content, url):
+    """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
     name = datetime.today().strftime("%H:%M")
     make_day_folder(url)
-    f = open(f"{name}.html", "w")
-    f.write(str(content))
-    f.close()
-    os.chdir(root_dir)
-    logger.debug(f"{name} snaphot saved.")
+    with open(f"{name}.html", "w", encoding='UTF-8') as file:
+        file.write(str(content))
+        file.close()
+        os.chdir(root_dir)
+        logger.debug(f"{name} snaphot saved.")

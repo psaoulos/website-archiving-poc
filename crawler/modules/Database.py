@@ -1,3 +1,4 @@
+""" Module containing all functions responsible for DataBase manipulation. """
 import sys
 import mariadb
 from modules import Logger, Variables, CustomExceptions

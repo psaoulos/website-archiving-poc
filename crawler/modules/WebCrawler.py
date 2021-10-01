@@ -25,17 +25,17 @@ class WebCrawler():
             self.check_page_protocol()
 
             page_html_content = self.get_html_content(self.page_url)
-            self.save_page_content(content=page_html_content, file_name=self.page_url, url=self.page_url)
+            self.save_page_content(content=page_html_content, url=self.page_url)
             page_links = self.get_links(page_html_content)
             Database.insert_links_found(page_links)
         except Exception as ex:
             logger.error(ex)
 
     @staticmethod
-    def save_page_content(content, file_name, url):
+    def save_page_content(content, url):
         """ Save page html content to file system. """
         FileSystem.save_page(
-            content=content, file_name=file_name, url=url)
+            content=content, url=url)
 
     def get_links(self, page_html_content):
         """ Get links from page html content. """

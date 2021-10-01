@@ -1,7 +1,9 @@
+""" Module containing application's core Logging functionality. """
 import os
 import logging
 
 def get_logger_lever(value):
+    """ Helper function for getting loggin level from string value. """
     return {
         'NOTSET': logging.NOTSET,
         'DEBUG': logging.DEBUG,
@@ -13,6 +15,7 @@ def get_logger_lever(value):
 
 
 def init_logger():
+    """ Initializer for Logger. """
     if "CH_LEVEL" in os.environ:
         ch_level = get_logger_lever(os.getenv('CH_LEVEL'))
     else:
@@ -27,21 +30,22 @@ def init_logger():
     formatter = logging.Formatter(
         "%(asctime)s %(funcName)s - %(levelname)s - %(message)s")
     # Setup console logging
-    ch = logging.StreamHandler()
-    ch.setLevel(ch_level)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    console_handler = logging.StreamHandler()
+    console_handler.setLevel(ch_level)
+    console_handler.setFormatter(formatter)
+    logger.addHandler(console_handler)
     # Setup file logging as well
     if not os.path.exists('./logs'):
         os.makedirs('./logs')
-        logger.debug(f"Logs Folder did not exist, creating!")
-    fh = logging.FileHandler("./logs/app.log", mode='w')
-    fh.setLevel(fh_level)
-    fh.setFormatter(formatter)
-    logger.addHandler(fh)
+        logger.debug("Logs Folder did not exist, creating!")
+    file_handler = logging.FileHandler("./logs/app.log", mode='w')
+    file_handler.setLevel(fh_level)
+    file_handler.setFormatter(formatter)
+    logger.addHandler(file_handler)
 
     if "CH_LEVEL" not in os.environ and "FH_LEVEL" not in os.environ:
         logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to INFO level logs.")
 
 def get_logger():
+    """ Getter function for application's core Logger. """
     return logging.getLogger("crawler_logger")

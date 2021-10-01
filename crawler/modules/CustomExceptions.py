@@ -1,4 +1,5 @@
-import modules.Logger as Logger
+""" Module containing all custom exceptions used. """
+from modules import Logger
 
 logger = Logger.get_logger()
 
