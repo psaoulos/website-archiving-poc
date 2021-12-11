@@ -121,7 +121,9 @@ disable=print-statement,
         arguments-differ,
         logging-fstring-interpolation,
         broad-except,
-        too-many-branches
+        too-many-branches,
+        global-statement,
+        consider-using-f-string
 
 
 [REPORTS]

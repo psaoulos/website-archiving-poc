@@ -11,6 +11,7 @@ problem_connecting = False
 problem_connecting_counter = 0
 
 def connect_to_db():
+    """ Helper function for connecting to mariaDB . """
     global problem_connecting
     try:
         if problem_connecting is False:
@@ -24,21 +25,28 @@ def connect_to_db():
                 connect_timeout=2
             )
             if not check_user_permissions(dbcon):
-                logger.error(f"{env_variables.get_env_var('MARIADB_USER')} does not have all permissions on {env_variables.get_env_var('MARIADB_DATABASE')}, please check env variables as specified on readme.")
+                logger.error(
+                    f"{env_variables.get_env_var('MARIADB_USER')} does not have all"
+                    f" permissions on {env_variables.get_env_var('MARIADB_DATABASE')},"
+                    f" please check env variables as specified on readme."
+                )
                 dbcon.close()
                 sys.exit(1)
             else:
                 return dbcon
         else:
-            return CustomExceptions.DBConnectionException("Skipped DB Connection, please check if DB is live and credentials passed in .env")
-    except mariadb.Error as e:
+            return CustomExceptions.DBConnectionException(
+                "Skipped DB Connection, please check if DB is live and credentials passed in .env"
+            )
+    except mariadb.Error as ex:
         global problem_connecting_counter
         problem_connecting_counter = problem_connecting_counter + 1
         if problem_connecting_counter == 3:
             problem_connecting = True
-        return CustomExceptions.DBConnectionException(e)
+        return CustomExceptions.DBConnectionException(ex)
 
 def check_user_permissions(dbcon):
+    """ Helper function to check if user provided has the required permissions on mariaDB. """
     dbcur = dbcon.cursor()
     dbcur.execute("SHOW GRANTS FOR CURRENT_USER")
     row = dbcur.fetchone()
@@ -47,7 +55,11 @@ def check_user_permissions(dbcon):
         permission = row[0]
         permission = permission.replace('`', '')
         permission = permission.replace('\\', '')
-        if f"GRANT ALL PRIVILEGES ON {env_variables.get_env_var('MARIADB_DATABASE')}.* TO {env_variables.get_env_var('MARIADB_USER')}@" in permission:
+        if_statement = (
+            f"GRANT ALL PRIVILEGES ON {env_variables.get_env_var('MARIADB_DATABASE')}.*"
+            f" TO {env_variables.get_env_var('MARIADB_USER')}@"
+        )
+        if if_statement in permission:
             all_permissions = True
         row = dbcur.fetchone()
     dbcur.close()
@@ -55,6 +67,7 @@ def check_user_permissions(dbcon):
 
 
 def check_if_table_exists(dbcon, tablename):
+    """ Helper function for checking in a table allready exists in mariaDB. """
     dbcur = dbcon.cursor()
     dbcur.execute("""
         SELECT COUNT(*)
@@ -69,35 +82,42 @@ def check_if_table_exists(dbcon, tablename):
 
 
 def init_database():
+    """ Helper function for initializing the naruaDB """
     dbcon = connect_to_db()
-    if type(dbcon) is CustomExceptions.DBConnectionException:
+    if isinstance(dbcon, CustomExceptions.DBConnectionException):
         del dbcon
-        return CustomExceptions.DBGenericException("Could not init DB as a connection was not established.")
+        CustomExceptions.DBGenericException("Could not init DB as a connection was not established.")
+        return
     dbcur = dbcon.cursor()
     try:
         if not check_if_table_exists(dbcon,"links_table"):
-            logger.debug(f"links_table table did not exist, creating.")
+            logger.debug("links_table table did not exist, creating.")
             dbcur.execute("CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, primary key(link))")
-    except mariadb.Error as e:
-        logger.error(f"Error creating table: {e}")
+    except mariadb.Error as ex:
+        logger.error(f"Error creating table: {ex}")
         dbcur.close()
         dbcon.close()
         sys.exit(1)
     dbcur.close()
     dbcon.close()
+    return
 
 def insert_links_found(links):
+    """ Helper function for inserting links on links_table, while ignoring duplicate entries. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
         # Using IGNORE to pass duplicate links
-        dbcur.executemany(f"INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}.links_table(link, checked) VALUES (?, ?)",
-            (links))
+        query = (
+            f"INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}."
+            "links_table(link, checked) VALUES (?, ?)"
+        )
+        dbcur.executemany(query,(links))
         rowcount = dbcur.rowcount
         logger.debug(f"Inserted {rowcount} links to DB.")
         dbcon.commit()
-    except Exception as e:
-        logger.error(f"Error committing insert_links_found transaction: {e}")
+    except Exception as ex:
+        logger.error(f"Error committing insert_links_found transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()

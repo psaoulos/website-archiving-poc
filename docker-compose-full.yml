@@ -15,7 +15,7 @@ services:
         condition: service_healthy
   mariadb:
     image: mariadb
-    restart: always
+    # restart: always #Commented due to auto start on boot of dev machine
     volumes:
       - ./database:/var/lib/mysql
     env_file:
@@ -27,7 +27,7 @@ services:
       retries: 5
   phpmyadmin:
     image: phpmyadmin
-    restart: always
+    # restart: always #Commented due to auto start on boot of dev machine
     ports:
       - 8080:80
     environment:
