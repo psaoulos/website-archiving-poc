@@ -5,16 +5,17 @@ from modules import Logger, Variables, CustomExceptions
 
 logger = Logger.get_logger()
 env_variables = Variables()
-# Used to denote if 3 consecutive connections could not be established, in that case no further connection attempts 
+# Used to denote if 3 consecutive connections could not be established, in that case no further connection attempts
 # will be made in order for the crawler not to hung at every connection attempt
-problem_connecting = False
-problem_connecting_counter = 0
+PROBLEM_CONNECTING = False
+PROBLEM_CONNECTING_COUNTER = 0
 
 def connect_to_db():
-    """ Helper function for connecting to mariaDB . """
-    global problem_connecting
+    """ Helper function for connecting to mariaDB. """
+    global PROBLEM_CONNECTING
+    global PROBLEM_CONNECTING_COUNTER
     try:
-        if problem_connecting is False:
+        if PROBLEM_CONNECTING is False:
             dbcon = mariadb.connect(
                 user=env_variables.get_env_var("MARIADB_USER"),
                 password=env_variables.get_env_var("MARIADB_PASSWORD"),
@@ -39,10 +40,9 @@ def connect_to_db():
                 "Skipped DB Connection, please check if DB is live and credentials passed in .env"
             )
     except mariadb.Error as ex:
-        global problem_connecting_counter
-        problem_connecting_counter = problem_connecting_counter + 1
-        if problem_connecting_counter == 3:
-            problem_connecting = True
+        PROBLEM_CONNECTING_COUNTER = PROBLEM_CONNECTING_COUNTER + 1
+        if PROBLEM_CONNECTING_COUNTER == 3:
+            PROBLEM_CONNECTING = True
         return CustomExceptions.DBConnectionException(ex)
 
 def check_user_permissions(dbcon):
@@ -101,6 +101,19 @@ def init_database():
     dbcur.close()
     dbcon.close()
     return
+
+def clean_table(table_name):
+    """ Helper function to clear a DB table after done iterating. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        dbcur.execute(f"TRUNCATE TABLE {table_name}")
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error committing {table_name} truncate transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
 
 def insert_links_found(links):
     """ Helper function for inserting links on links_table, while ignoring duplicate entries. """

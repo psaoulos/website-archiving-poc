@@ -2,7 +2,7 @@
 import ssl
 from urllib3 import poolmanager
 import requests
-from lxml import html
+from bs4 import BeautifulSoup, SoupStrainer
 from modules import Logger, FileSystem, Database
 
 logger = Logger.get_logger()
@@ -35,21 +35,17 @@ class WebCrawler():
     def save_page_content(content, url):
         """ Save page html content to file system. """
         FileSystem.save_page(
-            content=content, url=url)
+            content=BeautifulSoup(content, "html.parser").prettify(), url=url)
 
     def get_links(self, page_html_content):
         """ Get links from page html content. """
-        element_tree = html.fromstring(page_html_content)
-        element_tree.make_links_absolute(self.page_url, resolve_base_href=True)
-        links = list(element_tree.iterlinks())
+        links = BeautifulSoup(page_html_content, "html.parser", parse_only=SoupStrainer("a"))
         logger.debug(f"Found {len(links)} links under {self.page_url}. Going to clean.")
-        clean_list = list()
+        clean_list = []
         for link in links:
-            # Returns every link found in page, Contains images too (src)
-            # (<Element a at 0x7fa00824cbd0>, 'href', 'http://www.in.gr/epikoinonia/', 0)
-            if link[1] == "href":
-                if link[2].startswith(self.page_url):
-                    clean_list.append((link[2], False))
+            if link.has_attr('href'):
+                if link['href'].startswith(self.page_url):
+                    clean_list.append((link['href'], False))
         logger.debug(f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
 

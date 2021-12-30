@@ -19,8 +19,8 @@ def main():
 
     Database.init_database()
     my_crawler.get_root_page_links()
-
     while loop_over:
+        # Database.clean_table("links_table")
         time.sleep(60.0 - ((time.time() - starttime) % 60.0))
 
 if __name__ == "__main__":
