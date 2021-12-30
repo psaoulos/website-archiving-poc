@@ -26,9 +26,11 @@ def init_logger():
         fh_level = logging.DEBUG
     logger = logging.getLogger("crawler_logger")
     logger.setLevel(ch_level)
-    # Format for our loglines
+    # Format for loglines, adding padding up to 8 for CRITICAL level
     formatter = logging.Formatter(
-        "%(asctime)s %(funcName)s - %(levelname)s - %(message)s")
+        "[%(asctime)s] [%(levelname)8s] --- %(message)s (%(funcName)s:%(filename)s:%(lineno)s)", "%Y-%m-%d %H:%M:%S"
+    )
+
     # Setup console logging
     console_handler = logging.StreamHandler()
     console_handler.setLevel(ch_level)
@@ -46,6 +48,7 @@ def init_logger():
     if "CH_LEVEL" not in os.environ and "FH_LEVEL" not in os.environ:
         logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to INFO level logs.")
 
-def get_logger():
+
+def get_logger(logger_name="crawler_logger"):
     """ Getter function for application's core Logger. """
-    return logging.getLogger("crawler_logger")
+    return logging.getLogger(logger_name)
