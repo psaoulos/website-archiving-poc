@@ -59,7 +59,7 @@ done
 # make database's container folder if not exists
 mkdir -p database
 
-# optional scorched earth directive
+# optional scorched earth directive during development
 # docker container stop $(docker container ls -aq)
 # docker rm $(docker ps -a -q)
 

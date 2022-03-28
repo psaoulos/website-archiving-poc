@@ -21,18 +21,18 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: mysqladmin ping -h 127.0.0.1 -u $$MARIADB_USER --password=$$MARIADB_PASSWORD
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MARIADB_ROOT_PASSWORD
       interval: 4s
       timeout: 2s
       retries: 5
-  phpmyadmin:
-    image: phpmyadmin
-    # restart: always #Commented due to auto start on boot of dev machine
-    ports:
-      - 8080:80
-    environment:
-      - PMA_ARBITRARY=1
-      - PMA_HOST=mariadb
-    depends_on:
-      mariadb:
-        condition: service_healthy
+  # phpmyadmin:
+  #   image: phpmyadmin
+  #   # restart: always #Commented due to auto start on boot of dev machine
+  #   ports:
+  #     - 8080:80
+  #   environment:
+  #     - PMA_ARBITRARY=1
+  #     - PMA_HOST=mariadb
+  #   depends_on:
+  #     mariadb:
+  #       condition: service_healthy

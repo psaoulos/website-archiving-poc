@@ -47,23 +47,32 @@ def connect_to_db():
 
 def check_user_permissions(dbcon):
     """ Helper function to check if user provided has the required permissions on mariaDB. """
-    dbcur = dbcon.cursor()
-    dbcur.execute("SHOW GRANTS FOR CURRENT_USER")
-    row = dbcur.fetchone()
-    all_permissions = False
-    while row is not None:
-        permission = row[0]
-        permission = permission.replace('`', '')
-        permission = permission.replace('\\', '')
-        if_statement = (
-            f"GRANT ALL PRIVILEGES ON {env_variables.get_env_var('MARIADB_DATABASE')}.*"
-            f" TO {env_variables.get_env_var('MARIADB_USER')}@"
-        )
-        if if_statement in permission:
-            all_permissions = True
+    try:
+        dbcur = dbcon.cursor()
+        dbcur.execute("SHOW GRANTS FOR CURRENT_USER")
         row = dbcur.fetchone()
-    dbcur.close()
-    return all_permissions
+        all_permissions = False
+        while row is not None:
+            permission = row[0]
+            permission = permission.replace('`', '')
+            permission = permission.replace('\\', '')
+            if_statement = (
+                f"GRANT ALL PRIVILEGES ON {env_variables.get_env_var('MARIADB_DATABASE').lower()}.*"
+                f" TO {env_variables.get_env_var('MARIADB_USER')}@"
+            )
+            root_if_statement = (
+                f"GRANT ALL PRIVILEGES ON *.*"
+                f" TO {env_variables.get_env_var('MARIADB_USER')}@"
+            )
+            if if_statement in permission:
+                all_permissions = True
+            elif root_if_statement in permission:
+                all_permissions = True
+            row = dbcur.fetchone()
+        dbcur.close()
+        return all_permissions
+    except Exception as e:
+        return CustomExceptions.DBConnectionException(ex)
 
 
 def check_if_table_exists(dbcon, tablename):

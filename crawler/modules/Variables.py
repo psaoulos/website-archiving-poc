@@ -6,13 +6,14 @@ from modules import Logger, General
 
 logger = Logger.get_logger()
 
+# Default Value,, Required to be set by user on .env file where "-" is used 
 env_variables = {
-    "WEBPAGE_URL": "-",
+    "WEBPAGE_URL": "https://www.in.gr/",
     "MARIADB_IP": "-",
-    "MARIADB_USER": "-",
+    "MARIADB_USER": "root",
     "MARIADB_ROOT_PASSWORD": "-",
     "MARIADB_PASSWORD": "-",
-    "MARIADB_PORT": "-",
+    "MARIADB_PORT": "3306",
     "MARIADB_DATABASE": "-",
 }
 
@@ -30,7 +31,6 @@ class Variables():
                 env_variables["WEBPAGE_URL"] = f"http://{env_variables['WEBPAGE_URL']}"
         else:
             logger.debug("No WEBPAGE_URL env var found, defaulting.")
-            env_variables["WEBPAGE_URL"] = "https://www.in.gr/"
 
         if "MARIADB_IP" in os.environ:
             env_variables["MARIADB_IP"] = os.getenv("MARIADB_IP").strip()
@@ -48,7 +48,6 @@ class Variables():
             env_variables["MARIADB_USER"] = os.getenv("MARIADB_USER").strip()
         else:
             logger.info("No MARIADB_USER env var found, defaulting to root.")
-            env_variables["MARIADB_USER"] = "root"
 
         if env_variables["MARIADB_USER"] == "root":
             if "MARIADB_ROOT_PASSWORD" in os.environ:
@@ -67,12 +66,12 @@ class Variables():
         if "MARIADB_PORT" in os.environ:
             env_variables["MARIADB_PORT"] = int(os.getenv("MARIADB_PORT").strip())
         else:
-            env_variables["MARIADB_PORT"] = 3306
+            logger.info("No MARIADB_PORT env var found, defaulting to 3306.")
 
         if "MARIADB_DATABASE" in os.environ:
             env_variables["MARIADB_DATABASE"] = os.getenv("MARIADB_DATABASE").strip()
         else:
-            logger.error("No MARIADB_DATABASE env var found, please specify set it on root .env.")
+            logger.error("No MARIADB_DATABASE env var found, please specify it on root .env.")
             self.provide_var_template_and_exit()
 
     @staticmethod
@@ -82,13 +81,13 @@ class Variables():
             with open("env", "a",encoding='UTF-8') as env_file:
                 content = (
                     '# Please fill the following as instructed on the README.md file of project\n'
-                    f'WEBPAGE_URL = "{env_variables["WEBPAGE_URL"]}"\n'
-                    f'MARIADB_IP = "{env_variables["MARIADB_IP"]}"\n'
-                    f'MARIADB_USER = "{env_variables["MARIADB_USER"]}"\n'
-                    f'MARIADB_ROOT_PASSWORD = "{env_variables["MARIADB_ROOT_PASSWORD"]}"\n'
-                    f'MARIADB_PASSWORD = "{env_variables["MARIADB_PASSWORD"]}"\n'
-                    f'MARIADB_PORT = "{env_variables["MARIADB_PORT"]}"\n'
-                    f'MARIADB_DATABASE = "{env_variables["MARIADB_DATABASE"]}"\n'
+                    f'WEBPAGE_URL="{env_variables["WEBPAGE_URL"]}"\n'
+                    f'MARIADB_IP="{env_variables["MARIADB_IP"]}"\n'
+                    f'MARIADB_USER="{env_variables["MARIADB_USER"]}"\n'
+                    f'MARIADB_ROOT_PASSWORD="{env_variables["MARIADB_ROOT_PASSWORD"]}"\n'
+                    f'MARIADB_PASSWORD="{env_variables["MARIADB_PASSWORD"]}"\n'
+                    f'MARIADB_PORT="{env_variables["MARIADB_PORT"]}"\n'
+                    f'MARIADB_DATABASE="{env_variables["MARIADB_DATABASE"]}"\n'
                 )
                 env_file.write(content)
                 env_file.close()

@@ -46,7 +46,7 @@ def init_logger():
     logger.addHandler(file_handler)
 
     if "CH_LEVEL" not in os.environ and "FH_LEVEL" not in os.environ:
-        logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to INFO level logs.")
+        logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to DEBUG level logs.")
 
 
 def get_logger(logger_name="crawler_logger"):
