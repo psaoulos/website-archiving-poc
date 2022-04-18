@@ -15,7 +15,7 @@ def get_logger_lever(value):
 
 
 def init_logger():
-    """ Initializer for Logger. """
+    """ Initializer for application Logger. """
     if "CH_LEVEL" in os.environ:
         ch_level = get_logger_lever(os.getenv('CH_LEVEL'))
     else:
@@ -24,7 +24,7 @@ def init_logger():
         fh_level = get_logger_lever(os.getenv('FH_LEVEL'))
     else:
         fh_level = logging.DEBUG
-    logger = logging.getLogger("crawler_logger")
+    logger = logging.getLogger("crawler_backend")
     logger.setLevel(ch_level)
     # Format for loglines, adding padding up to 8 for CRITICAL level
     formatter = logging.Formatter(
@@ -40,7 +40,7 @@ def init_logger():
     if not os.path.exists('./logs'):
         os.makedirs('./logs')
         logger.debug("Logs Folder did not exist, creating!")
-    file_handler = logging.FileHandler("./logs/app.log", mode='w')
+    file_handler = logging.FileHandler(f"./logs/crawler_backend.log", mode='w')
     file_handler.setLevel(fh_level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -49,6 +49,6 @@ def init_logger():
         logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to DEBUG level logs.")
 
 
-def get_logger(logger_name="crawler_logger"):
+def get_logger(logger_name="crawler_backend"):
     """ Getter function for application's core Logger. """
     return logging.getLogger(logger_name)

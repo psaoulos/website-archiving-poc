@@ -1,5 +1,5 @@
-pymongo==3.9.0
-PyInquirer==1.0.3
+Flask==2.1.1
+waitress==2.1.1
 beautifulsoup4==4.9.0
 requests==2.22.0
 mariadb==1.0.7

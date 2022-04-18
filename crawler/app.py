@@ -1,32 +1,59 @@
-""" Entry file for application. """
+""" Entry file for the application. """
 from __future__ import print_function, unicode_literals
+import subprocess
+from flask import Flask, jsonify, current_app
+from waitress import serve
 import os
 import time
 from modules import WebCrawler, Variables, Database, FileSystem, Logger
 
+sub_process = None
+
 def main():
     """ Main app function. """
+    
     FileSystem.init_folders()
-
     env_variables = Variables()
     env_variables.init_variables_from_env()
-
-    my_crawler = WebCrawler()
-    my_crawler.set_page(env_variables.get_env_var("WEBPAGE_URL"))
-
-    starttime = time.time()
-    loop_over = False
-
     Database.init_database()
-    my_crawler.get_root_page_links()
-    while loop_over:
-        # Database.clean_table("links_table")
-        time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+
+    app = Flask("crawler_backend")
+
+    @app.route('/crawler/start')
+    def crawler_start():
+        global sub_process
+        logger = Logger.get_logger()
+        response = None
+        try:
+            sub_process = subprocess.Popen(["python3","crawler.py"])
+            response = jsonify(success=True)
+        except:
+            response = jsonify(success=False)
+        return response
+    
+    @app.route('/crawler/stop')
+    def crawler_stop():
+        global sub_process
+        logger = Logger.get_logger()
+        response = None
+        try:
+            if sub_process is not None:
+                current_app.logger.info("Killing subprocess.")
+                sub_process.kill()
+                sub_process = None
+            else:
+                current_app.logger.info("No subprocess to kill, try calling start endpoint first.")
+            response = jsonify(success=True)
+        except:
+            response = jsonify(success=False)
+        return response
+    
+    serve(app, host="0.0.0.0", port=8080)
 
 if __name__ == "__main__":
     print("Logs at: "+os.getcwd()+"/logs/app.log")
     Logger.init_logger()
     logger = Logger.get_logger()
-    logger.info("Scrypt started!")
+    logger.info("Backend started!")
     main()
-    logger.info("Scrypt finished!")
+    logger.info("Backend finished!")

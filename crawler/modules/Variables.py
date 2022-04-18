@@ -78,7 +78,7 @@ class Variables():
         if "TIME_ZONE" in os.environ:
             env_variables["TIME_ZONE"] = os.getenv("TIME_ZONE").strip()
         else:
-            logger.error("No TIME_ZONE env var found, defaulting to Europe/Athens.")
+            logger.info("No TIME_ZONE env var found, defaulting to Europe/Athens.")
 
     @staticmethod
     def provide_var_template_and_exit():
