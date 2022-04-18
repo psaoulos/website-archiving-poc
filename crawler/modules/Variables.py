@@ -15,6 +15,7 @@ env_variables = {
     "MARIADB_PASSWORD": "-",
     "MARIADB_PORT": "3306",
     "MARIADB_DATABASE": "-",
+    "TIME_ZONE": "Europe/Athens",
 }
 
 class Variables():
@@ -73,6 +74,11 @@ class Variables():
         else:
             logger.error("No MARIADB_DATABASE env var found, please specify it on root .env.")
             self.provide_var_template_and_exit()
+        
+        if "TIME_ZONE" in os.environ:
+            env_variables["TIME_ZONE"] = os.getenv("TIME_ZONE").strip()
+        else:
+            logger.error("No TIME_ZONE env var found, defaulting to Europe/Athens.")
 
     @staticmethod
     def provide_var_template_and_exit():
@@ -88,6 +94,7 @@ class Variables():
                     f'MARIADB_PASSWORD="{env_variables["MARIADB_PASSWORD"]}"\n'
                     f'MARIADB_PORT="{env_variables["MARIADB_PORT"]}"\n'
                     f'MARIADB_DATABASE="{env_variables["MARIADB_DATABASE"]}"\n'
+                    f'TIME_ZONE="{env_variables["TIME_ZONE"]}"\n'
                 )
                 env_file.write(content)
                 env_file.close()
