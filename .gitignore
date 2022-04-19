@@ -1,5 +1,8 @@
 # Application specific
 backend/archive
+frontend/build
+frontend/node_modules
+frontend/package-lock.json
 env
 
 # Github generated python gitignore:

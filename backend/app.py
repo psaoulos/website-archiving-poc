@@ -2,6 +2,7 @@
 from __future__ import print_function, unicode_literals
 import subprocess
 from flask import Flask, jsonify, current_app
+from flask_cors import CORS, cross_origin
 from waitress import serve
 import os
 import time
@@ -18,8 +19,10 @@ def main():
     Database.init_database()
 
     app = Flask("crawler_backend")
+    CORS(app, support_credentials=False)
 
-    @app.route('/crawler/start')
+    @app.route('/crawler/start', methods = ['GET', 'POST'])
+    @cross_origin(supports_credentials=False)
     def crawler_start():
         global sub_process
         logger = Logger.get_logger()
@@ -31,7 +34,8 @@ def main():
             response = jsonify(success=False)
         return response
     
-    @app.route('/crawler/stop')
+    @app.route('/crawler/stop', methods = ['GET', 'POST'])
+    @cross_origin(supports_credentials=False)
     def crawler_stop():
         global sub_process
         logger = Logger.get_logger()
@@ -48,7 +52,7 @@ def main():
             response = jsonify(success=False)
         return response
     
-    serve(app, host="0.0.0.0", port=8080)
+    serve(app, host="0.0.0.0", port=3000)
 
 if __name__ == "__main__":
     print("Logs at: "+os.getcwd()+"/logs/app.log")

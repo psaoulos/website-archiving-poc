@@ -59,6 +59,14 @@ done
 # make database's container folder if not exists
 mkdir -p database
 
+# Install Frontend's dependencies and build it
+echo "Installing dependencies for Frontend!"
+cd frontend
+npm i
+echo "Building Frontend!"
+npm run build
+cd ..
+
 # optional scorched earth directive during development
 # docker container stop $(docker container ls -aq)
 # docker rm $(docker ps -a -q)
