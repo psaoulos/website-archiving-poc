@@ -1,5 +1,5 @@
 # Application specific
-crawler/archive
+backend/archive
 env
 
 # Github generated python gitignore:

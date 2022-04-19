@@ -1,15 +1,15 @@
 version: '3.0'
 services:
-  crawler:
-    build: crawler
-    image: crawler
+  backend:
+    build: backend
+    image: backend
     user: $USER_ID:$GROUP_ID
     ports:
       - "8080:8080"
     env_file:
       - .env
     volumes:
-      - ./crawler:/usr/src/app
+      - ./backend:/usr/src/app
     depends_on:
       mariadb:
         condition: service_healthy

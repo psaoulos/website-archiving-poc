@@ -6,7 +6,7 @@ Installation steps:
     ```shel 
     pip3 install -r requirements.txt
     ```
-2. Execute crawler by running inside crawler folder:
+2. Execute crawler by running inside backend folder:
     ```shel
     python3 app.py
     ```

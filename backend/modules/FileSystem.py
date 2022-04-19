@@ -14,9 +14,9 @@ def init_folders():
     # Create directory
     try:
         os.mkdir("./archive")
-        logger.debug("Directory ./crawler/archive Created.")
+        logger.debug("Directory ./backend/archive Created.")
     except FileExistsError:
-        logger.debug("Directory ./crawler/archive already exists.")
+        logger.debug("Directory ./backend/archive already exists.")
 
 
 def get_os_friendly_name(url):
