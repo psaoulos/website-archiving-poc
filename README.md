@@ -17,6 +17,7 @@ This project uses docker containers in order to fire up a DB for data storage, t
 >```
 >Optional Enviromental Variables:
 >```
+>DEVELOP_MODE="true"              # Option to only recreate backend for faster redeployments
 >CH_LEVEL="DEBUG"                 # Logging level for crawler container
 >```
 > Available logging levels are: 

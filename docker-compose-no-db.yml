@@ -1,0 +1,30 @@
+version: '3.0'
+
+networks:
+  ptixiakiErgasiaNetwork:
+    name: ptixiaki_ergasia_network
+
+services:
+  backend:
+    build: backend
+    image: backend
+    container_name: ptixiaki_ergasia_backend
+    user: $USER_ID:$GROUP_ID
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    networks:
+      - ptixiakiErgasiaNetwork
+    volumes:
+      - ./backend:/usr/src/app
+  frontend:
+    build: frontend
+    image: frontend
+    container_name: ptixiaki_ergasia_frontend
+    ports:
+      - "8080:80"
+    networks:
+      - ptixiakiErgasiaNetwork
+    depends_on:
+      - backend

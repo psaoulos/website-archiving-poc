@@ -1,19 +1,22 @@
-version: '3.1'
+version: '3.0'
+
+networks:
+  ptixiakiErgasiaNetwork:
+    name: ptixiaki_ergasia_network
+
 services:
   mariadb:
     image: mariadb
+    container_name: ptixiaki_ergasia_db
     # restart: always #Commented due to auto start on boot of dev machine
     volumes:
       - ./database:/var/lib/mysql
     env_file:
       - .env
-  phpmyadmin:
-    image: phpmyadmin
-    # restart: always #Commented due to auto start on boot of dev machine
-    ports:
-      - 8080:80
-    environment:
-      - PMA_ARBITRARY=1
-      - PMA_HOST=mariadb
-    depends_on:
-      - mariadb
+    networks:
+      - ptixiakiErgasiaNetwork
+    healthcheck:
+      test: mysqladmin ping -h 127.0.0.1 -u root --password=$$MARIADB_ROOT_PASSWORD
+      interval: 4s
+      timeout: 2s
+      retries: 5
