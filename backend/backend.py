@@ -1,18 +1,18 @@
 """ Entry file for the application. """
 from __future__ import print_function, unicode_literals
 import subprocess
-from flask import Flask, jsonify, current_app
+import os
+from flask import Flask, jsonify, current_app, request
 from flask_cors import CORS, cross_origin
 from waitress import serve
-import os
-import time
 from modules import WebCrawler, Variables, Database, FileSystem, Logger
 
-sub_process = None
+SUB_PROCESS = None
+
 
 def main():
     """ Main app function. """
-    
+
     FileSystem.init_folders()
     env_variables = Variables()
     env_variables.init_variables_from_env()
@@ -21,43 +21,52 @@ def main():
     app = Flask("crawler_backend")
     CORS(app, support_credentials=False)
 
-    @app.route('/crawler/start', methods = ['GET', 'POST'])
+    @app.route('/crawler/start', methods=['GET', 'POST'])
     @cross_origin(supports_credentials=False)
     def crawler_start():
-        global sub_process
-        logger = Logger.get_logger()
+        global SUB_PROCESS
         response = None
+        repeat_times = 1
+        interval_seconds = 5
         try:
-            sub_process = subprocess.Popen(["python3","crawler.py"])
+            if 'repeat_times' in request.args:
+                repeat_times = request.args.get('repeat_times')
+            if 'interval_seconds' in request.args:
+                interval_seconds = request.args.get('interval_seconds')
+            current_app.logger.debug(f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval.")
+            SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(repeat_times), str(interval_seconds)])
             response = jsonify(success=True)
-        except:
+        except Exception as exc:
+            current_app.logger.error(exc)
             response = jsonify(success=False)
         return response
-    
-    @app.route('/crawler/stop', methods = ['GET', 'POST'])
+
+    @app.route('/crawler/stop', methods=['GET', 'POST'])
     @cross_origin(supports_credentials=False)
     def crawler_stop():
-        global sub_process
-        logger = Logger.get_logger()
+        global SUB_PROCESS
         response = None
         try:
-            if sub_process is not None:
+            if SUB_PROCESS is not None:
                 current_app.logger.info("Killing subprocess.")
-                sub_process.kill()
-                sub_process = None
+                SUB_PROCESS.kill()
+                SUB_PROCESS = None
             else:
-                current_app.logger.info("No subprocess to kill, try calling start endpoint first.")
+                current_app.logger.info(
+                    "No subprocess to kill, try calling start endpoint first.")
             response = jsonify(success=True)
-        except:
+        except Exception as exc:
+            current_app.logger.error(exc)
             response = jsonify(success=False)
         return response
-    
+
     serve(app, host="0.0.0.0", port=3000)
+
 
 if __name__ == "__main__":
     print("Logs at: "+os.getcwd()+"/logs/app.log")
     Logger.init_logger()
     logger = Logger.get_logger()
-    logger.info("Backend started!")
+    logger.info("Crawler Backend started!")
     main()
-    logger.info("Backend finished!")
+    logger.info("Crawler Backend finished!")
