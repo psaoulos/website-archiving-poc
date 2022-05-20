@@ -10,6 +10,7 @@ env_variables = Variables()
 PROBLEM_CONNECTING = False
 PROBLEM_CONNECTING_COUNTER = 0
 
+
 def connect_to_db():
     """ Helper function for connecting to mariaDB. """
     global PROBLEM_CONNECTING
@@ -45,6 +46,7 @@ def connect_to_db():
             PROBLEM_CONNECTING = True
         return CustomExceptions.DBConnectionException(ex)
 
+
 def check_user_permissions(dbcon):
     """ Helper function to check if user provided has the required permissions on mariaDB. """
     try:
@@ -71,7 +73,7 @@ def check_user_permissions(dbcon):
             row = dbcur.fetchone()
         dbcur.close()
         return all_permissions
-    except Exception as e:
+    except Exception as ex:
         return CustomExceptions.DBConnectionException(ex)
 
 
@@ -95,13 +97,15 @@ def init_database():
     dbcon = connect_to_db()
     if isinstance(dbcon, CustomExceptions.DBConnectionException):
         del dbcon
-        CustomExceptions.DBGenericException("Could not init DB as a connection was not established.")
+        CustomExceptions.DBGenericException(
+            "Could not init DB as a connection was not established.")
         return
     dbcur = dbcon.cursor()
     try:
-        if not check_if_table_exists(dbcon,"links_table"):
+        if not check_if_table_exists(dbcon, "links_table"):
             logger.debug("links_table table did not exist, creating.")
-            dbcur.execute("CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, primary key(link))")
+            dbcur.execute(
+                "CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, primary key(link))")
     except mariadb.Error as ex:
         logger.error(f"Error creating table: {ex}")
         dbcur.close()
@@ -111,6 +115,7 @@ def init_database():
     dbcon.close()
     return
 
+
 def clean_table(table_name):
     """ Helper function to clear a DB table after done iterating. """
     dbcon = connect_to_db()
@@ -119,10 +124,12 @@ def clean_table(table_name):
         dbcur.execute(f"TRUNCATE TABLE {table_name}")
         dbcon.commit()
     except Exception as ex:
-        logger.error(f"Error committing {table_name} truncate transaction: {ex}")
+        logger.error(
+            f"Error committing {table_name} truncate transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
+
 
 def insert_links_found(links):
     """ Helper function for inserting links on links_table, while ignoring duplicate entries. """
@@ -134,7 +141,7 @@ def insert_links_found(links):
             f"INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}."
             "links_table(link, checked) VALUES (?, ?)"
         )
-        dbcur.executemany(query,(links))
+        dbcur.executemany(query, (links))
         rowcount = dbcur.rowcount
         logger.debug(f"Inserted {rowcount} links to DB.")
         dbcon.commit()

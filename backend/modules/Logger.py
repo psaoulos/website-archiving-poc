@@ -2,6 +2,7 @@
 import os
 import logging
 
+
 def get_logger_lever(value):
     """ Helper function for getting loggin level from string value. """
     return {
@@ -40,13 +41,10 @@ def init_logger():
     if not os.path.exists('./logs'):
         os.makedirs('./logs')
         logger.debug("Logs Folder did not exist, creating!")
-    file_handler = logging.FileHandler(f"./logs/crawler_backend.log", mode='w')
+    file_handler = logging.FileHandler("./logs/crawler_backend.log", mode='a')
     file_handler.setLevel(fh_level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
-
-    if "CH_LEVEL" not in os.environ and "FH_LEVEL" not in os.environ:
-        logger.info("CH_LEVEL and FH_LEVEL env vars not set, defaulting to DEBUG level logs.")
 
 
 def get_logger(logger_name="crawler_backend"):

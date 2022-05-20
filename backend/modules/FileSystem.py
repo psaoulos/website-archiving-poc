@@ -1,13 +1,14 @@
 """ Module containing all functions responsible for File System manipulation. """
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
-import os
 from modules import Logger, Variables
 
 
 logger = Logger.get_logger()
 env_variables = Variables()
 root_dir = os.getcwd()
+
 
 def init_folders():
     """ Creates folder required for application to operate. """
@@ -45,7 +46,8 @@ def create_page_folder(url):
 def make_day_folder(url):
     """ Creates a date specific folder to contain archived snapshots of page. """
     if os.getcwd().endswith(f"/archive/{get_os_friendly_name(url)}"):
-        sub_dir_name = datetime.now(ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime('%d-%m-%y')
+        sub_dir_name = datetime.now(
+            ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime('%d-%m-%y')
         try:
             os.mkdir(sub_dir_name)
         except FileExistsError:
@@ -56,7 +58,8 @@ def make_day_folder(url):
 def save_page(content, url):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
-    name = datetime.now(ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M")
+    name = datetime.now(
+        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M")
     make_day_folder(url)
     with open(f"{name}.html", "w", encoding='UTF-8') as file:
         file.write(str(content))

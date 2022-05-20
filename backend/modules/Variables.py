@@ -6,7 +6,7 @@ from modules import Logger, General
 
 logger = Logger.get_logger()
 
-# Default Value,, Required to be set by user on .env file where "-" is used 
+# Default Value,, Required to be set by user on .env file where "-" is used
 env_variables = {
     "WEBPAGE_URL": "https://www.in.gr/",
     "MARIADB_IP": "-",
@@ -18,6 +18,7 @@ env_variables = {
     "TIME_ZONE": "Europe/Athens",
 }
 
+
 class Variables():
     """ Class used for env variables handling. """
 
@@ -28,7 +29,8 @@ class Variables():
             env_variables["WEBPAGE_URL"] = os.getenv('WEBPAGE_URL').strip()
             if not (env_variables["WEBPAGE_URL"].startswith("http://") or
                     env_variables["WEBPAGE_URL"].startswith("https://")):
-                logger.debug("WEBPAGE_URL env var does not specify http/https, defaulting to http.")
+                logger.debug(
+                    "WEBPAGE_URL env var does not specify http/https, defaulting to http.")
                 env_variables["WEBPAGE_URL"] = f"http://{env_variables['WEBPAGE_URL']}"
         else:
             logger.debug("No WEBPAGE_URL env var found, defaulting.")
@@ -37,54 +39,63 @@ class Variables():
             env_variables["MARIADB_IP"] = os.getenv("MARIADB_IP").strip()
         else:
             if General.is_docker():
-                logger.info("No MARIADB_IP env var found, "
-                "since running on docker defaulting to work with provided docker-compose.")
+                logger.debug("No MARIADB_IP env var found, "
+                            "since running on docker defaulting to work with provided docker-compose.")
                 env_variables["MARIADB_IP"] = "mariadb"
             else:
                 logger.error("No MARIADB_IP env var found, "
-                "please specify in on root .env or consider running the docker-compose version.")
+                             "please specify in on root .env or consider running the docker-compose version.")
                 self.provide_var_template_and_exit()
 
         if "MARIADB_USER" in os.environ:
             env_variables["MARIADB_USER"] = os.getenv("MARIADB_USER").strip()
         else:
-            logger.info("No MARIADB_USER env var found, defaulting to root.")
+            logger.debug("No MARIADB_USER env var found, defaulting to root.")
 
         if env_variables["MARIADB_USER"] == "root":
             if "MARIADB_ROOT_PASSWORD" in os.environ:
-                env_variables["MARIADB_ROOT_PASSWORD"] = os.getenv("MARIADB_ROOT_PASSWORD").strip()
-                env_variables["MARIADB_PASSWORD"] = os.getenv("MARIADB_ROOT_PASSWORD").strip()
+                env_variables["MARIADB_ROOT_PASSWORD"] = os.getenv(
+                    "MARIADB_ROOT_PASSWORD").strip()
+                env_variables["MARIADB_PASSWORD"] = os.getenv(
+                    "MARIADB_ROOT_PASSWORD").strip()
             else:
-                logger.error("No MARIADB_ROOT_PASSWORD env var found, please specify it on root .env.")
+                logger.error(
+                    "No MARIADB_ROOT_PASSWORD env var found, please specify it on root .env.")
                 self.provide_var_template_and_exit()
         else:
             if "MARIADB_PASSWORD" in os.environ:
-                env_variables["MARIADB_PASSWORD"] = os.getenv("MARIADB_PASSWORD").strip()
+                env_variables["MARIADB_PASSWORD"] = os.getenv(
+                    "MARIADB_PASSWORD").strip()
             else:
-                logger.error("No MARIADB_PASSWORD env var found, please specify it on root .env.")
+                logger.error(
+                    "No MARIADB_PASSWORD env var found, please specify it on root .env.")
                 self.provide_var_template_and_exit()
 
         if "MARIADB_PORT" in os.environ:
-            env_variables["MARIADB_PORT"] = int(os.getenv("MARIADB_PORT").strip())
+            env_variables["MARIADB_PORT"] = int(
+                os.getenv("MARIADB_PORT").strip())
         else:
-            logger.info("No MARIADB_PORT env var found, defaulting to 3306.")
+            logger.debug("No MARIADB_PORT env var found, defaulting to 3306.")
 
         if "MARIADB_DATABASE" in os.environ:
-            env_variables["MARIADB_DATABASE"] = os.getenv("MARIADB_DATABASE").strip()
+            env_variables["MARIADB_DATABASE"] = os.getenv(
+                "MARIADB_DATABASE").strip()
         else:
-            logger.error("No MARIADB_DATABASE env var found, please specify it on root .env.")
+            logger.error(
+                "No MARIADB_DATABASE env var found, please specify it on root .env.")
             self.provide_var_template_and_exit()
-        
+
         if "TIME_ZONE" in os.environ:
             env_variables["TIME_ZONE"] = os.getenv("TIME_ZONE").strip()
         else:
-            logger.info("No TIME_ZONE env var found, defaulting to Europe/Athens.")
+            logger.debug(
+                "No TIME_ZONE env var found, defaulting to Europe/Athens.")
 
     @staticmethod
     def provide_var_template_and_exit():
         """ Populate env file with a template of variables needed for the application to work. """
         if not os.path.isfile("env"):
-            with open("env", "a",encoding='UTF-8') as env_file:
+            with open("env", "a", encoding='UTF-8') as env_file:
                 content = (
                     '# Please fill the following as instructed on the README.md file of project\n'
                     f'WEBPAGE_URL="{env_variables["WEBPAGE_URL"]}"\n'
@@ -98,9 +109,11 @@ class Variables():
                 )
                 env_file.write(content)
                 env_file.close()
-                logger.error("Dummy env file Created, Please fill it and copy it to project root folder as .env")
+                logger.error(
+                    "Dummy env file Created, Please fill it and copy it to project root folder as .env")
         else:
-            logger.error("Please fill env file and copy it to project root folder as .env")
+            logger.error(
+                "Please fill env file and copy it to project root folder as .env")
         sys.exit(1)
 
     @staticmethod

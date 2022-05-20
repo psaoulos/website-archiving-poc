@@ -35,19 +35,23 @@ fi
 if [ -z "${WEBPAGE_URL}" ]; then
     ask_user=true
 else
-    echo "The site you wish to crawl over is the following: $WEBPAGE_URL"
-    select yn in "Yes" "No"; do
-        case $yn in
-        Yes)
-            ask_user=false
-            break
-            ;;
-        No)
-            ask_user=true
-            break
-            ;;
-        esac
-    done
+    if [ "$DEVELOP_MODE" = false ]; then
+        echo "The site you wish to crawl over is the following: $WEBPAGE_URL"
+        select yn in "Yes" "No"; do
+            case $yn in
+            Yes)
+                ask_user=false
+                break
+                ;;
+            No)
+                ask_user=true
+                break
+                ;;
+            esac
+        done
+    else
+        ask_user=false
+    fi
 fi
 
 # get user input for site address

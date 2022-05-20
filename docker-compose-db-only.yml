@@ -9,6 +9,8 @@ services:
     image: mariadb
     container_name: ptixiaki_ergasia_db
     # restart: always #Commented due to auto start on boot of dev machine
+    ports:
+      - "3306:3306"
     volumes:
       - ./database:/var/lib/mysql
     env_file:
