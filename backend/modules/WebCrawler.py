@@ -1,5 +1,6 @@
 """ Module containting the core webcrawler functionality. """
 import ssl
+import re
 import requests
 from urllib3 import poolmanager
 from bs4 import BeautifulSoup, SoupStrainer
@@ -34,12 +35,6 @@ class WebCrawler():
         except Exception as ex:
             logger.error(ex)
 
-    @staticmethod
-    def save_page_content(content, url):
-        """ Save page html content to file system. """
-        FileSystem.save_page(
-            content=BeautifulSoup(content, "html.parser").prettify(), url=url)
-
     def get_links(self, page_html_content):
         """ Get links from page html content. """
         links = BeautifulSoup(
@@ -54,19 +49,6 @@ class WebCrawler():
         logger.debug(
             f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list
-
-    @staticmethod
-    def get_html_content(url):
-        """ Get raw html content from page url. """
-        try:
-            session = requests.session()
-            session.mount("https://", TLSAdapter())
-            page_html = session.get(url)
-            session.close()
-        except Exception as ex:
-            logger.error(ex)
-            return ""
-        return page_html.content.decode("UTF-8")
 
     def check_page_protocol(self):
         """
@@ -84,6 +66,52 @@ class WebCrawler():
             logger.debug(
                 f"Original url redirects to {page_session.url}, updating root url.")
             self.page_url = page_session.url
+
+    @staticmethod
+    def get_html_content(url):
+        """ Get raw html content from page url. """
+        try:
+            session = requests.session()
+            session.mount("https://", TLSAdapter())
+            page_html = session.get(url)
+            session.close()
+        except Exception as ex:
+            logger.error(ex)
+            return ""
+        return page_html.content
+
+    @staticmethod
+    def save_page_content(content, url):
+        """ Save page html content to file system. """
+        FileSystem.save_page(
+            content=BeautifulSoup(content, "html.parser").prettify(),
+            url=url,
+            encoding=WebCrawler.get_encoding(content)
+        )
+
+    @staticmethod
+    def get_encoding(content):
+        """
+        Checks and returns the page's prefered encoding.
+        """
+        soup = BeautifulSoup(content, "html.parser")
+        if soup and soup.meta:
+            encod = soup.meta.get('charset')
+            if encod is None:
+                encod = soup.meta.get('content-type')
+                if encod is None:
+                    content = soup.meta.get('content')
+                    match = re.search('charset=(.*)', content)
+                    if match:
+                        encod = match.group(1)
+                    else:
+                        logger.error('unable to find encoding')
+                        raise ValueError('unable to find encoding')
+        else:
+            logger.error('unable to find encoding')
+            raise ValueError('unable to find encoding')
+        logger.debug(f'Page\'s prefered encoding is {encod}')
+        return encod
 
 
 class TLSAdapter(requests.adapters.HTTPAdapter):

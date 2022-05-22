@@ -55,14 +55,14 @@ def make_day_folder(url):
         os.chdir(sub_dir_name)
 
 
-def save_page(content, url):
+def save_page(content, url, encoding):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
     name = datetime.now(
         ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M")
     make_day_folder(url)
-    with open(f"{name}.html", "w", encoding='UTF-8') as file:
-        file.write(str(content))
+    with open(f"{name}.html", "w", encoding=encoding) as file:
+        file.write(content)
         file.close()
         os.chdir(root_dir)
         logger.debug(f"{name} snaphot saved.")
