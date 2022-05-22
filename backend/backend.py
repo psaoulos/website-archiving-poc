@@ -28,13 +28,18 @@ def main():
         response = None
         repeat_times = 1
         interval_seconds = 5
+        crawl_url = env_variables.get_env_var("WEBPAGE_URL")
         try:
             if 'repeat_times' in request.args:
                 repeat_times = request.args.get('repeat_times')
             if 'interval_seconds' in request.args:
                 interval_seconds = request.args.get('interval_seconds')
-            current_app.logger.debug(f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval.")
-            SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(repeat_times), str(interval_seconds)])
+            if 'crawl_url' in request.args:
+                crawl_url = request.args.get('crawl_url')
+            current_app.logger.debug(
+                f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url}.")
+            SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
+                repeat_times), str(interval_seconds), str(crawl_url)])
             response = jsonify(success=True)
         except Exception as exc:
             current_app.logger.error(exc)
