@@ -18,13 +18,13 @@ services:
       - ptixiakiErgasiaNetwork
     volumes:
       - ./backend:/usr/src/app
-  frontend:
-    build: frontend
-    image: frontend
-    container_name: ptixiaki_ergasia_frontend
-    ports:
-      - "8080:80"
-    networks:
-      - ptixiakiErgasiaNetwork
-    depends_on:
-      - backend
+  # frontend:
+  #   build: frontend
+  #   image: frontend
+  #   container_name: ptixiaki_ergasia_frontend
+  #   ports:
+  #     - "8080:80"
+  #   networks:
+  #     - ptixiakiErgasiaNetwork
+  #   depends_on:
+  #     - backend
