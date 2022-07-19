@@ -21,13 +21,31 @@ def main():
     app = Flask("crawler_backend")
     CORS(app, support_credentials=False)
 
+    @app.route('/crawler/status', methods=['GET', 'POST'])
+    @cross_origin(supports_credentials=False)
+    def crawler_status():
+        response = None
+        try:
+            if SUB_PROCESS is None:
+                response = jsonify(success=True, running=False)
+            else:
+                process_running = SUB_PROCESS.poll()
+                if process_running is None:
+                    response = jsonify(success=True, running=True)
+                else:
+                    response = jsonify(success=True, running=False)
+        except Exception as exc:
+            current_app.logger.error(exc)
+            response = jsonify(success=False)
+        return response
+
     @app.route('/crawler/start', methods=['GET', 'POST'])
     @cross_origin(supports_credentials=False)
     def crawler_start():
         global SUB_PROCESS
         response = None
         repeat_times = 1
-        interval_seconds = 5
+        interval_seconds = 600
         crawl_url = env_variables.get_env_var("WEBPAGE_URL")
         try:
             if 'repeat_times' in request.args:
@@ -40,10 +58,10 @@ def main():
                 f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url}.")
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(crawl_url)])
-            response = jsonify(success=True)
+            response = jsonify(success=True, started=True)
         except Exception as exc:
             current_app.logger.error(exc)
-            response = jsonify(success=False)
+            response = jsonify(success=False, started=False)
         return response
 
     @app.route('/crawler/stop', methods=['GET', 'POST'])
@@ -52,14 +70,22 @@ def main():
         global SUB_PROCESS
         response = None
         try:
-            if SUB_PROCESS is not None:
-                current_app.logger.info("Killing subprocess.")
-                SUB_PROCESS.kill()
-                SUB_PROCESS = None
-            else:
+            if SUB_PROCESS is None:
                 current_app.logger.info(
-                    "No subprocess to kill, try calling start endpoint first.")
-            response = jsonify(success=True)
+                        "No subprocess to kill.")
+                response = jsonify(success=True, stopped=False)
+            else:
+                process_running = SUB_PROCESS.poll()
+                if process_running is None:
+                # SUB_PROCESS.subprocess is alive
+                    current_app.logger.info("Killing subprocess.")
+                    SUB_PROCESS.kill()
+                    SUB_PROCESS = None
+                    response = jsonify(success=True, stopped=True)
+                else:
+                    current_app.logger.info(
+                        "No subprocess to kill.")
+                    response = jsonify(success=True, stopped=False)
         except Exception as exc:
             current_app.logger.error(exc)
             response = jsonify(success=False)

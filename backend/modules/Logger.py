@@ -2,6 +2,11 @@
 import os
 import logging
 
+class CustomLogRecord(logging.LogRecord):
+    """ Custom LogRecord used to set max characters for function and file name """
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.origin = f"{self.funcName}:{self.filename}"
 
 def get_logger_lever(value):
     """ Helper function for getting loggin level from string value. """
@@ -17,6 +22,7 @@ def get_logger_lever(value):
 
 def init_logger():
     """ Initializer for application Logger. """
+    logging.setLogRecordFactory(CustomLogRecord)
     if "CH_LEVEL" in os.environ:
         ch_level = get_logger_lever(os.getenv('CH_LEVEL'))
     else:
@@ -29,7 +35,7 @@ def init_logger():
     logger.setLevel(ch_level)
     # Format for loglines, adding padding up to 8 for CRITICAL level
     formatter = logging.Formatter(
-        "[%(asctime)s] [%(levelname)8s] --- %(message)s (%(funcName)s:%(filename)s:%(lineno)s)", "%Y-%m-%d %H:%M:%S"
+        "[%(asctime)s][%(levelname)8s][%(origin)47s:%(lineno)3s] -- %(message)s", "%Y-%m-%d %H:%M:%S"
     )
 
     # Setup console logging
