@@ -19,10 +19,11 @@ def main():
     Database.init_database()
 
     app = Flask("crawler_backend")
-    CORS(app, support_credentials=False)
+    CORS(app)
+    app.config['CORS_HEADERS'] = 'Content-Type'
 
     @app.route('/crawler/status', methods=['GET', 'POST'])
-    @cross_origin(supports_credentials=False)
+    @cross_origin()
     def crawler_status():
         response = None
         try:
@@ -40,7 +41,7 @@ def main():
         return response
 
     @app.route('/crawler/start', methods=['GET', 'POST'])
-    @cross_origin(supports_credentials=False)
+    @cross_origin()
     def crawler_start():
         global SUB_PROCESS
         response = None
@@ -65,7 +66,7 @@ def main():
         return response
 
     @app.route('/crawler/stop', methods=['GET', 'POST'])
-    @cross_origin(supports_credentials=False)
+    @cross_origin()
     def crawler_stop():
         global SUB_PROCESS
         response = None
