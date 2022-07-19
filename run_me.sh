@@ -87,11 +87,11 @@ mkdir -p database
 
 # Install Frontend's dependencies and build it (skipped if in DEVELOP_MODE)
 if [ "$DEVELOP_MODE" = false ]; then
-    echo "Installing dependencies for Frontend!"
+    echo "Cleaning Frontend environment!"
     cd frontend
-    npm i
+    flutter clean
     echo "Building Frontend!"
-    npm run build
+    flutter build web
     cd ..
 fi
 
