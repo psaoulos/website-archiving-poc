@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/screens/actions.screen.dart';
+import 'package:frontend/screens/results.screen.dart';
 import 'package:frontend/services/crawler.services.dart';
+import 'package:frontend/widgets/centered_outlined_button.widget.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 import 'package:frontend/widgets/running_indicator_chip.widget.dart';
 
@@ -57,6 +60,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                   ),
                 ),
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: Column(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text("Available crawler actions:"),
+                        ),
+                        CenteredOutlinedButton(
+                          buttonLabel: "Start Crawler",
+                          buttonWidth: 150,
+                          buttonOnClick: () {
+                            Navigator.of(context).pushReplacementNamed(
+                                ActionsScreen.routeName,
+                                arguments: CrawlerActions.start);
+                          },
+                        ),
+                        CenteredOutlinedButton(
+                          buttonLabel: "Stop Crawler",
+                          buttonWidth: 150,
+                          buttonOnClick: () {
+                            Navigator.of(context).pushReplacementNamed(
+                                ActionsScreen.routeName,
+                                arguments: CrawlerActions.stop);
+                          },
+                        ),
+                        CenteredOutlinedButton(
+                          buttonLabel: "See some Results",
+                          buttonWidth: 150,
+                          buttonOnClick: () {
+                            Navigator.of(context).pushReplacementNamed(
+                              ResultsScreen.routeName,
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                )
               ],
             ),
           ],
