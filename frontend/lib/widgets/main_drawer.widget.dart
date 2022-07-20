@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-enum Options { status, start, stop, results, dashboard }
+enum Options { start, stop, results, dashboard }
 
 class MainDrawer extends StatelessWidget {
   final Function setOptionPressed;
@@ -22,15 +22,6 @@ class MainDrawer extends StatelessWidget {
             title: const Text('Dashboard'),
             onTap: () {
               setOptionPressed(Options.dashboard);
-              Scaffold.of(context).closeDrawer();
-            },
-          ),
-          const Divider(),
-          ListTile(
-            leading: const Icon(Icons.info),
-            title: const Text('Crawler status'),
-            onTap: () {
-              setOptionPressed(Options.status);
               Scaffold.of(context).closeDrawer();
             },
           ),

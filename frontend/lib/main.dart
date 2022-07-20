@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
-import 'package:frontend/screens/status.screen.dart';
 import 'package:provider/provider.dart';
 
 import 'package:frontend/providers/dashboard.provider.dart';
@@ -34,11 +33,6 @@ class MyApp extends StatelessWidget {
           if (settings.name == DashboardScreen.routeName) {
             return PageRouteBuilder(
               pageBuilder: (_, __, ___) => DashboardScreen(),
-              settings: settings,
-            );
-          } else if (settings.name == StatusScreen.routeName) {
-            return PageRouteBuilder(
-              pageBuilder: (_, __, ___) => StatusScreen(),
               settings: settings,
             );
           } else if (settings.name == ActionsScreen.routeName) {

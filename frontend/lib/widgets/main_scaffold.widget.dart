@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
-import 'package:frontend/screens/status.screen.dart';
 import 'package:frontend/widgets/main_drawer.widget.dart';
 
 class MainScaffold extends StatefulWidget {
@@ -26,9 +25,6 @@ class _MainScaffoldState extends State<MainScaffold> {
       switch (option) {
         case Options.dashboard:
           _routeToNavigate = DashboardScreen.routeName;
-          break;
-        case Options.status:
-          _routeToNavigate = StatusScreen.routeName;
           break;
         case Options.start:
           _routeToNavigate = ActionsScreen.routeName;
@@ -59,7 +55,6 @@ class _MainScaffoldState extends State<MainScaffold> {
       onDrawerChanged: (isOpen) {
         if (!isOpen && _routeToNavigate != '') {
           String? currentRoute = ModalRoute.of(context)?.settings.name;
-          print(currentRoute);
           if (currentRoute != null && currentRoute != _routeToNavigate) {
             Timer(const Duration(milliseconds: 200), () {
               if (_routeToNavigate == ActionsScreen.routeName) {
