@@ -34,21 +34,25 @@ class MyApp extends StatelessWidget {
           if (settings.name == DashboardScreen.routeName) {
             return PageRouteBuilder(
               pageBuilder: (_, __, ___) => DashboardScreen(),
+              settings: settings,
             );
           } else if (settings.name == StatusScreen.routeName) {
             return PageRouteBuilder(
               pageBuilder: (_, __, ___) => StatusScreen(),
+              settings: settings,
             );
           } else if (settings.name == ActionsScreen.routeName) {
             if (arguments != null && arguments != '') {
               final action = settings.arguments as CrawlerActions;
               return PageRouteBuilder(
                 pageBuilder: (_, __, ___) => ActionsScreen(action: action),
+                settings: settings,
               );
             }
           } else if (settings.name == ResultsScreen.routeName) {
             return PageRouteBuilder(
               pageBuilder: (_, __, ___) => ResultsScreen(),
+              settings: settings,
             );
           }
           return null;
@@ -56,6 +60,7 @@ class MyApp extends StatelessWidget {
         onUnknownRoute: (settings) {
           return MaterialPageRoute(
             builder: (ctx) => DashboardScreen(),
+            settings: settings,
           );
         },
       ),

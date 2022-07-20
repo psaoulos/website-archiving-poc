@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
+import 'package:frontend/widgets/running_indicator_chip.widget.dart';
 
 class DashboardScreen extends StatefulWidget {
   static const routeName = '/dashboard';
@@ -11,17 +12,20 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  bool _running = true;
+  bool _running = false;
 
-  @override
-  void initState() {
-    super.initState();
+  void getCrawlerStatus() {
     CrawlerApiService().getCrawlerStatus().then((response) {
-      print(response.toString());
       setState(() {
         _running = response.running;
       });
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    getCrawlerStatus();
   }
 
   @override
@@ -30,21 +34,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
       title: 'Dashboard',
       childWidget: Builder(builder: (context) {
         return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text('Press to open drawer!'),
-                OutlinedButton(
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    child: Text(_running ? 'true' : 'false'))
+                Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(right: 10),
+                          child: Text('Crawler Status: '),
+                        ),
+                        RunningIndicatorChip(
+                          isRunning: _running,
+                          refreshFunction: getCrawlerStatus,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
               ],
             ),
           ],
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
         );
       }),
     );

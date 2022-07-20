@@ -24,6 +24,9 @@ class _MainScaffoldState extends State<MainScaffold> {
   void _setOptionPressed(Options option) {
     setState(() {
       switch (option) {
+        case Options.dashboard:
+          _routeToNavigate = DashboardScreen.routeName;
+          break;
         case Options.status:
           _routeToNavigate = StatusScreen.routeName;
           break;
@@ -55,14 +58,18 @@ class _MainScaffoldState extends State<MainScaffold> {
       ),
       onDrawerChanged: (isOpen) {
         if (!isOpen && _routeToNavigate != '') {
-          Timer(const Duration(milliseconds: 200), () {
-            if (_routeToNavigate == ActionsScreen.routeName) {
-              Navigator.of(context).pushReplacementNamed(_routeToNavigate,
-                  arguments: _optionAction);
-            } else {
-              Navigator.of(context).pushReplacementNamed(_routeToNavigate);
-            }
-          });
+          String? currentRoute = ModalRoute.of(context)?.settings.name;
+          print(currentRoute);
+          if (currentRoute != null && currentRoute != _routeToNavigate) {
+            Timer(const Duration(milliseconds: 200), () {
+              if (_routeToNavigate == ActionsScreen.routeName) {
+                Navigator.of(context).pushReplacementNamed(_routeToNavigate,
+                    arguments: _optionAction);
+              } else {
+                Navigator.of(context).pushReplacementNamed(_routeToNavigate);
+              }
+            });
+          }
         }
       },
       body: widget.childWidget ?? Container(),
