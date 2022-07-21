@@ -70,7 +70,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           child: Text("Available crawler actions:"),
                         ),
                         CenteredOutlinedButton(
-                          buttonLabel: "Start Crawler",
+                          buttonLabel: "Start the Crawler",
                           buttonWidth: 150,
                           buttonOnClick: () {
                             Navigator.of(context).pushReplacementNamed(
@@ -79,7 +79,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           },
                         ),
                         CenteredOutlinedButton(
-                          buttonLabel: "Stop Crawler",
+                          buttonLabel: "Stop the Crawler",
                           buttonWidth: 150,
                           buttonOnClick: () {
                             Navigator.of(context).pushReplacementNamed(

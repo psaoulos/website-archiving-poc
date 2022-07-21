@@ -1,6 +1,8 @@
 """ Module containing all functions responsible for DataBase manipulation. """
+from datetime import datetime
 import sys
 import mariadb
+import pytz
 from modules import Logger, Variables, CustomExceptions
 
 logger = Logger.get_logger()
@@ -104,8 +106,16 @@ def init_database():
     try:
         if not check_if_table_exists(dbcon, "links_table"):
             logger.debug("links_table table did not exist, creating.")
-            dbcur.execute(
-                "CREATE TABLE links_table (link NVARCHAR(255), checked BOOLEAN, primary key(link))")
+            dbcur.execute("""
+            CREATE TABLE links_table (root_address NVARCHAR(255), link NVARCHAR(255), 
+            checked BOOLEAN, primary key(root_address,link))
+            """)
+        if not check_if_table_exists(dbcon, "crawler_info"):
+            logger.debug("crawler_info table did not exist, creating.")
+            dbcur.execute("""
+            CREATE TABLE crawler_info (address NVARCHAR(255), iterations INT, iteration_interval INT, 
+            current_iteration INT, started_timestamp TIMESTAMP, process_id INT, running BOOLEAN DEFAULT TRUE, primary key(address, started_timestamp))
+            """)
     except mariadb.Error as ex:
         logger.error(f"Error creating table: {ex}")
         dbcur.close()
@@ -131,17 +141,79 @@ def clean_table(table_name):
     dbcon.close()
 
 
-def insert_links_found(links):
-    """ Helper function for inserting links on links_table, while ignoring duplicate entries. """
+def insert_new_crawl_task(pid, address, iterations, interval):
+    """ Helper function for inserting new crawl tasks info on crawler_info table. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
-        # Using IGNORE to pass duplicate links
-        query = (
-            f"INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}."
-            "links_table(link, checked) VALUES (?, ?)"
-        )
-        dbcur.executemany(query, (links))
+        timestamp = datetime.now(pytz.timezone(
+            Variables.get_env_var('TIME_ZONE')))
+        query = (f"""
+            INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
+            crawler_info(address, iterations, iteration_interval, current_iteration, started_timestamp, process_id) VALUES (?, ?, ?, ?, ?, ?)
+        """)
+        dbcur.execute(query, (address, int(iterations),
+                      int(interval), 1, timestamp, int(pid)))
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error committing crawler_info transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def increment_crawler_step(process_id, address):
+    """ Helper function for incrementing crawler current_iteration. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        query = (f"""
+            UPDATE crawler_info SET current_iteration = current_iteration + 1 
+            WHERE address = '{address}' AND process_id = '{process_id}' AND running = 1
+        """)
+        dbcur.execute(query)
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(
+            f"Error updating crawler_info {process_id} transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def update_finished_crawler(process_id, address):
+    """ Helper function for incrementing crawler current_iteration. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        query = (f"""
+            UPDATE crawler_info SET running = 0
+            WHERE address = '{address}' AND process_id = '{process_id}' AND running = 1
+        """)
+        dbcur.execute(query)
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(
+            f"Error updating crawler_info for finished {process_id} transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def insert_links_found(address, links):
+    """ Helper function for inserting links on links_table, while ignoring duplicate entries. """
+    list_to_add = []
+    for link in links:
+        list_to_add.append((address, link, False))
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        # Using IGNORE to bypass duplicate links
+        query = (f"""
+            INSERT IGNORE INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
+            links_table(root_address, link, checked) VALUES (?, ?, ?)
+        """)
+        dbcur.executemany(query, (list_to_add))
         rowcount = dbcur.rowcount
         logger.debug(f"Inserted {rowcount} links to DB.")
         dbcon.commit()

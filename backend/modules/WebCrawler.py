@@ -31,7 +31,7 @@ class WebCrawler():
             self.save_page_content(
                 content=page_html_content, url=self.page_url)
             page_links = self.get_links(page_html_content)
-            Database.insert_links_found(page_links)
+            Database.insert_links_found(self.page_url, page_links)
         except Exception as ex:
             logger.error(ex)
 
@@ -44,8 +44,8 @@ class WebCrawler():
         clean_list = []
         for link in links:
             if link.has_attr('href'):
-                if link['href'].startswith(self.page_url):
-                    clean_list.append((link['href'], False))
+                if link['href'].startswith(self.page_url) and link['href'] != self.page_url:
+                    clean_list.append(link['href'])
         logger.debug(
             f"Going to iterate over {len(clean_list)}. Here goes nothing.")
         return clean_list

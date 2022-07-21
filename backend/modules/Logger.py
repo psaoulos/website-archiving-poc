@@ -1,12 +1,17 @@
 """ Module containing application's core Logging functionality. """
+from datetime import datetime
 import os
 import logging
+import pytz
+
 
 class CustomLogRecord(logging.LogRecord):
     """ Custom LogRecord used to set max characters for function and file name """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.origin = f"{self.funcName}:{self.filename}"
+
 
 def get_logger_lever(value):
     """ Helper function for getting loggin level from string value. """
@@ -18,6 +23,28 @@ def get_logger_lever(value):
         'ERROR': logging.ERROR,
         'CRITICAL': logging.CRITICAL
     }.get(value, logging.INFO)
+
+
+class Formatter(logging.Formatter):
+    """Override logging.Formatter to use an aware datetime object."""
+
+    def converter(self, timestamp):
+        """Converts default UTC time to TZ provided."""
+        from modules import Variables
+        date_time = datetime.fromtimestamp(timestamp, tz=pytz.UTC)
+        return date_time.astimezone(pytz.timezone(Variables.get_env_var('TIME_ZONE')))
+
+    def formatTime(self, record, datefmt=None):
+        """Format time accordingly."""
+        date_time = self.converter(record.created)
+        if datefmt:
+            formatted = date_time.strftime(datefmt)
+        else:
+            try:
+                formatted = date_time.isoformat(timespec='milliseconds')
+            except TypeError:
+                formatted = date_time.isoformat()
+        return formatted
 
 
 def init_logger():
@@ -33,8 +60,8 @@ def init_logger():
         fh_level = logging.DEBUG
     logger = logging.getLogger("crawler_backend")
     logger.setLevel(ch_level)
-    # Format for loglines, adding padding up to 8 for CRITICAL level
-    formatter = logging.Formatter(
+    # Format for loglines, adding padding up to 8 for CRITICAL level and up to 3 for linenumber
+    formatter = Formatter(
         "[%(asctime)s][%(levelname)8s][%(origin)47s:%(lineno)3s] -- %(message)s", "%Y-%m-%d %H:%M:%S"
     )
 

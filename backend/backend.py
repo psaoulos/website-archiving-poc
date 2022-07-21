@@ -59,6 +59,8 @@ def main():
                 f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url}.")
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(crawl_url)])
+            Database.insert_new_crawl_task(
+                SUB_PROCESS.pid, crawl_url, repeat_times, interval_seconds)
             response = jsonify(success=True, started=True)
         except Exception as exc:
             current_app.logger.error(exc)
@@ -73,12 +75,12 @@ def main():
         try:
             if SUB_PROCESS is None:
                 current_app.logger.info(
-                        "No subprocess to kill.")
+                    "No subprocess to kill.")
                 response = jsonify(success=True, stopped=False)
             else:
                 process_running = SUB_PROCESS.poll()
                 if process_running is None:
-                # SUB_PROCESS.subprocess is alive
+                    # SUB_PROCESS.subprocess is alive
                     current_app.logger.info("Killing subprocess.")
                     SUB_PROCESS.kill()
                     SUB_PROCESS = None
