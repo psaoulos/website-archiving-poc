@@ -46,6 +46,9 @@ def main():
                 Database.update_finished_crawler(os.getpid(), crawl_url)
     except Exception as exc:
         logger.error(f"[pid:{os.getpid()}] Error on crawler itteration, {exc}")
+    if os.path.isfile("./archive/temp.html"):
+        # Deleting temp file used for calculating diff ratio between archives
+        os.remove("./archive/temp.html")
     logger.info(f"[pid:{os.getpid()}] Crawler finished after {repeat_times} itterations!")
 
 

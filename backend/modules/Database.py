@@ -231,14 +231,14 @@ def insert_links_found(address, links):
     dbcon.close()
 
 
-def insert_new_archive_entry(address, file_location, encoding, ratio=None):
+def insert_new_archive_entry(address, file_location, encoding, dif_ratio=None):
     """ Helper function for inserting entry for new archive kept for specific address. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
         timestamp = datetime.now(pytz.timezone(
             Variables.get_env_var('TIME_ZONE')))
-        if ratio is None:
+        if dif_ratio is None:
             query = (f"""
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
                 archive_index(root_address, file_location, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?)
@@ -249,7 +249,7 @@ def insert_new_archive_entry(address, file_location, encoding, ratio=None):
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
                 archive_index(root_address, file_location, var_ratio_from_last, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location, ratio, encoding, timestamp))
+            dbcur.execute(query, (address, file_location, dif_ratio, encoding, timestamp))
         dbcon.commit()
     except Exception as ex:
         logger.error(f"Error committing archive_index transaction: {ex}")

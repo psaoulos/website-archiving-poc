@@ -34,13 +34,18 @@ class WebCrawler():
                 logger.debug(
                     "First crawl for requested address, gonna save archive.")
                 self.save_page_content(
-                    content=page_html_content, url=self.page_url)
+                    content=page_html_content, url=self.page_url, dif_ratio=None)
             else:
-                percentage = FileSystem.calculate_content_difference(last_archive[0], BeautifulSoup(
-                    page_html_content, "html.parser").prettify(), encoding=WebCrawler.get_encoding(page_html_content))
+                percentage = FileSystem.calculate_content_difference(
+                    file_a_location=last_archive[0],
+                    content_b=BeautifulSoup(
+                        page_html_content, "html.parser").prettify(),
+                    encoding_a=last_archive[2],
+                    encoding_b=WebCrawler.get_encoding(page_html_content)
+                )
                 if percentage != 1.0:
                     self.save_page_content(
-                        content=page_html_content, url=self.page_url)
+                        content=page_html_content, url=self.page_url, dif_ratio=percentage)
                 else:
                     logger.debug(
                         "Crawled file content is the same as last archive, skipping saving.")
@@ -96,12 +101,13 @@ class WebCrawler():
         return page_html.content
 
     @staticmethod
-    def save_page_content(content, url):
+    def save_page_content(content, url, dif_ratio):
         """ Save page html content to file system. """
         FileSystem.save_page(
             content=BeautifulSoup(content, "html.parser").prettify(),
             url=url,
-            encoding=WebCrawler.get_encoding(content)
+            encoding=WebCrawler.get_encoding(content),
+            dif_ratio=dif_ratio
         )
 
     @staticmethod

@@ -58,7 +58,7 @@ def make_day_folder():
     return sub_dir_name
 
 
-def save_page(content, url, encoding):
+def save_page(content, url, encoding, dif_ratio):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
     name = datetime.now(
@@ -73,14 +73,14 @@ def save_page(content, url, encoding):
         os.chdir(root_dir)
         logger.debug(f"{name} snaphot saved.")
         Database.insert_new_archive_entry(
-            address=url, file_location=file_location, encoding=encoding)
+            address=url, file_location=file_location, encoding=encoding, dif_ratio=dif_ratio)
 
 
-def calculate_file_difference(file_a_location, file_b_location, encoding="UTF-8"):
+def calculate_file_difference(file_a_location, file_b_location, encoding_a="UTF-8", encoding_b="UTF-8"):
     """ Calculates the difference percentage between two files according their paths given. """
     try:
-        with open(file_a_location, "r", encoding=encoding) as file_a:
-            with open(file_b_location, "r", encoding=encoding) as file_b:
+        with open(file_a_location, "r", encoding=encoding_a) as file_a:
+            with open(file_b_location, "r", encoding=encoding_b) as file_b:
                 seq_mat = difflib.SequenceMatcher()
                 seq_mat.set_seqs(file_a.readlines(),
                                  file_b.readlines())
@@ -93,14 +93,14 @@ def calculate_file_difference(file_a_location, file_b_location, encoding="UTF-8"
         return None
 
 
-def calculate_content_difference(file_a_location, content_b, encoding="UTF-8"):
-    """ Calculates the difference percentage between the first fileand the second crawled content. """
+def calculate_content_difference(file_a_location, content_b, encoding_a="UTF-8", encoding_b="UTF-8"):
+    """ Calculates the difference percentage between the first fileand the second crawled content."""
     try:
-        with open("./archive/temp.html", "w", encoding=encoding) as file:
+        with open("./archive/temp.html", "w", encoding=encoding_b) as file:
             file.write(content_b)
             file.close()
-        with open(file_a_location, "r", encoding=encoding) as file_a:
-            with open("./archive/temp.html", "r", encoding=encoding) as file_b:
+        with open(file_a_location, "r", encoding=encoding_a) as file_a:
+            with open("./archive/temp.html", "r", encoding=encoding_b) as file_b:
                 seq_mat = difflib.SequenceMatcher()
                 seq_mat.set_seqs(file_a.readlines(),
                                  file_b.readlines())
@@ -110,4 +110,21 @@ def calculate_content_difference(file_a_location, content_b, encoding="UTF-8"):
     except Exception as ex:
         logger.error(
             f"Exception while calculating archive difference for {file_a_location} and content for second file. {ex}")
+        return None
+
+
+def generate_diff_html(file_a_location, file_b_location, encoding="UTF-8"):
+    """ Generates the printable html diff file between two given archive files. """
+    try:
+        with open(file_a_location, "r", encoding=encoding) as file_a:
+            with open("./archive/temp.html", "r", encoding=encoding) as file_b:
+                difference = difflib.HtmlDiff(wrapcolumn=80)
+                html = difference.make_file(
+                    fromlines=file_a.readlines(), tolines=file_b.readlines(), context=True, numlines=3,
+                    fromdesc="Original", todesc="Modified"
+                )
+                return html
+    except Exception as ex:
+        logger.error(
+            f"Exception while generating diff html for {file_a_location} / {file_b_location}. {ex}")
         return None
