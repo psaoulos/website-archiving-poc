@@ -31,6 +31,7 @@ class Formatter(logging.Formatter):
     def converter(self, timestamp):
         """Converts default UTC time to TZ provided."""
         from modules import Variables
+        # Import needed inside function to avoid circular imports
         date_time = datetime.fromtimestamp(timestamp, tz=pytz.UTC)
         return date_time.astimezone(pytz.timezone(Variables.get_env_var('TIME_ZONE')))
 
@@ -83,3 +84,19 @@ def init_logger():
 def get_logger(logger_name="crawler_backend"):
     """ Getter function for application's core Logger. """
     return logging.getLogger(logger_name)
+
+def conditonal_logging(should_log, message, level="DEBUG", logger_name="crawler_backend"):
+    """ Helper function used to conditionaly print logs to avoid spamming the log output. """
+    if not should_log:
+        return
+    logger = get_logger(logger_name)
+    if level == "DEBUG":
+        logger.debug(message)
+    elif level == "INFO":
+        logger.info(message)
+    elif level == "WARNING":
+        logger.warning(message)
+    elif level == "ERROR":
+        logger.error(message)
+    elif level == "CRITICAL":
+        logger.critical(message)

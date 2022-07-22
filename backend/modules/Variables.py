@@ -21,7 +21,6 @@ env_variables = {
 
 class Variables():
     """ Class used for env variables handling. """
-
     def init_variables_from_env(self):
         """ Load and check env variables. """
 

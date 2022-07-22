@@ -113,8 +113,15 @@ def init_database():
         if not check_if_table_exists(dbcon, "crawler_info"):
             logger.debug("crawler_info table did not exist, creating.")
             dbcur.execute("""
-            CREATE TABLE crawler_info (address NVARCHAR(255), iterations INT, iteration_interval INT, 
-            current_iteration INT, started_timestamp TIMESTAMP, process_id INT, running BOOLEAN DEFAULT TRUE, primary key(address, started_timestamp))
+            CREATE TABLE crawler_info (root_address NVARCHAR(255), iterations INT, iteration_interval INT, 
+            current_iteration INT, started_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, process_id INT, 
+            running BOOLEAN DEFAULT TRUE, primary key(root_address, started_timestamp))
+            """)
+        if not check_if_table_exists(dbcon, "archive_index"):
+            logger.debug("archive_index table did not exist, creating.")
+            dbcur.execute("""
+            CREATE TABLE archive_index (root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
+            creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(root_address, creation_timestamp))
             """)
     except mariadb.Error as ex:
         logger.error(f"Error creating table: {ex}")
@@ -150,7 +157,7 @@ def insert_new_crawl_task(pid, address, iterations, interval):
             Variables.get_env_var('TIME_ZONE')))
         query = (f"""
             INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-            crawler_info(address, iterations, iteration_interval, current_iteration, started_timestamp, process_id) VALUES (?, ?, ?, ?, ?, ?)
+            crawler_info(root_address, iterations, iteration_interval, current_iteration, started_timestamp, process_id) VALUES (?, ?, ?, ?, ?, ?)
         """)
         dbcur.execute(query, (address, int(iterations),
                       int(interval), 1, timestamp, int(pid)))
@@ -169,7 +176,7 @@ def increment_crawler_step(process_id, address):
     try:
         query = (f"""
             UPDATE crawler_info SET current_iteration = current_iteration + 1 
-            WHERE address = '{address}' AND process_id = '{process_id}' AND running = 1
+            WHERE root_address = '{address}' AND process_id = '{process_id}' AND running = 1
         """)
         dbcur.execute(query)
         dbcon.commit()
@@ -188,7 +195,7 @@ def update_finished_crawler(process_id, address):
     try:
         query = (f"""
             UPDATE crawler_info SET running = 0
-            WHERE address = '{address}' AND process_id = '{process_id}' AND running = 1
+            WHERE root_address = '{address}' AND process_id = '{process_id}' AND running = 1
         """)
         dbcur.execute(query)
         dbcon.commit()
@@ -219,6 +226,33 @@ def insert_links_found(address, links):
         dbcon.commit()
     except Exception as ex:
         logger.error(f"Error committing insert_links_found transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def insert_new_archive_entry(address, file_location, ratio=None):
+    """ Helper function for inserting entry for new archive kept for specific address. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        timestamp = datetime.now(pytz.timezone(
+            Variables.get_env_var('TIME_ZONE')))
+        if ratio is None:
+            query = (f"""
+                INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
+                archive_index(root_address, file_location, creation_timestamp) VALUES (?, ?, ?)
+            """)
+            dbcur.execute(query, (address, file_location, timestamp))
+        else:
+            query = (f"""
+                INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
+                archive_index(root_address, file_location, var_ratio_from_last, creation_timestamp) VALUES (?, ?, ?, ?)
+            """)
+            dbcur.execute(query, (address, file_location, ratio, timestamp))
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error committing archive_index transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()

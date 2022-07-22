@@ -2,7 +2,7 @@
 import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
-from modules import Logger, Variables
+from modules import Logger, Variables, Database
 
 
 logger = Logger.get_logger()
@@ -43,26 +43,30 @@ def create_page_folder(url):
     os.chdir(root_dir)
 
 
-def make_day_folder(url):
+def make_day_folder():
     """ Creates a date specific folder to contain archived snapshots of page. """
-    if os.getcwd().endswith(f"/archive/{get_os_friendly_name(url)}"):
-        sub_dir_name = datetime.now(
-            ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime('%d-%m-%y')
-        try:
-            os.mkdir(sub_dir_name)
-        except FileExistsError:
-            logger.debug(f"{sub_dir_name} Sub-Folder exists!")
-        os.chdir(sub_dir_name)
+    sub_dir_name = datetime.now(
+        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime('%d-%m-%y')
+    try:
+        os.mkdir(sub_dir_name)
+    except FileExistsError:
+        logger.debug(f"{sub_dir_name} Sub-Folder exists!")
+    os.chdir(sub_dir_name)
+    return sub_dir_name
 
 
 def save_page(content, url, encoding):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
     name = datetime.now(
-        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M")
-    make_day_folder(url)
+        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M:%S")
+    folder_name = make_day_folder()
+    file_location = f"./archive/{get_os_friendly_name(url)}/{folder_name}/{name}.html"
+    logger.debug(
+        f"Saving archive on: {file_location}")
     with open(f"{name}.html", "w", encoding=encoding) as file:
         file.write(content)
         file.close()
         os.chdir(root_dir)
         logger.debug(f"{name} snaphot saved.")
+        Database.insert_new_archive_entry(address=url, file_location=file_location)
