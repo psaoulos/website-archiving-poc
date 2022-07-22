@@ -121,7 +121,7 @@ def init_database():
             logger.debug("archive_index table did not exist, creating.")
             dbcur.execute("""
             CREATE TABLE archive_index (root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
-            creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(root_address, creation_timestamp))
+            archive_encoding NVARCHAR(255), creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(root_address, creation_timestamp))
             """)
     except mariadb.Error as ex:
         logger.error(f"Error creating table: {ex}")
@@ -231,7 +231,7 @@ def insert_links_found(address, links):
     dbcon.close()
 
 
-def insert_new_archive_entry(address, file_location, ratio=None):
+def insert_new_archive_entry(address, file_location, encoding, ratio=None):
     """ Helper function for inserting entry for new archive kept for specific address. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
@@ -241,18 +241,39 @@ def insert_new_archive_entry(address, file_location, ratio=None):
         if ratio is None:
             query = (f"""
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-                archive_index(root_address, file_location, creation_timestamp) VALUES (?, ?, ?)
+                archive_index(root_address, file_location, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location, timestamp))
+            dbcur.execute(query, (address, file_location, encoding, timestamp))
         else:
             query = (f"""
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-                archive_index(root_address, file_location, var_ratio_from_last, creation_timestamp) VALUES (?, ?, ?, ?)
+                archive_index(root_address, file_location, var_ratio_from_last, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location, ratio, timestamp))
+            dbcur.execute(query, (address, file_location, ratio, encoding, timestamp))
         dbcon.commit()
     except Exception as ex:
         logger.error(f"Error committing archive_index transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
+
+def get_last_archive_entry(address):
+    """ Helper function for getting the last entry from the archive_index table. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT file_location, var_ratio_from_last, archive_encoding
+            FROM archive_index ai
+            WHERE root_address = '{address}'
+            ORDER BY creation_timestamp DESC LIMIT 1
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchone()
+    except Exception as ex:
+        logger.error(f"Error selecting from archive_index transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result

@@ -28,8 +28,23 @@ class WebCrawler():
             FileSystem.create_page_folder(self.page_url)
 
             page_html_content = self.get_html_content(self.page_url)
-            self.save_page_content(
-                content=page_html_content, url=self.page_url)
+
+            last_archive = Database.get_last_archive_entry(self.page_url)
+            if last_archive is None:
+                logger.debug(
+                    "First crawl for requested address, gonna save archive.")
+                self.save_page_content(
+                    content=page_html_content, url=self.page_url)
+            else:
+                percentage = FileSystem.calculate_content_difference(last_archive[0], BeautifulSoup(
+                    page_html_content, "html.parser").prettify(), encoding=WebCrawler.get_encoding(page_html_content))
+                if percentage != 1.0:
+                    self.save_page_content(
+                        content=page_html_content, url=self.page_url)
+                else:
+                    logger.debug(
+                        "Crawled file content is the same as last archive, skipping saving.")
+
             page_links = self.get_links(page_html_content)
             Database.insert_links_found(self.page_url, page_links)
         except Exception as ex:

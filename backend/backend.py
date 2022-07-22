@@ -5,7 +5,7 @@ import os
 from flask import Flask, jsonify, current_app, request
 from flask_cors import CORS, cross_origin
 from waitress import serve
-from modules import WebCrawler, Variables, Database, FileSystem, Logger
+from modules import Variables, Database, FileSystem, Logger
 
 SUB_PROCESS = None
 

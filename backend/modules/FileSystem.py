@@ -1,5 +1,8 @@
 """ Module containing all functions responsible for File System manipulation. """
+from ast import Try
+import logging
 import os
+import difflib
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from modules import Logger, Variables, Database
@@ -69,4 +72,42 @@ def save_page(content, url, encoding):
         file.close()
         os.chdir(root_dir)
         logger.debug(f"{name} snaphot saved.")
-        Database.insert_new_archive_entry(address=url, file_location=file_location)
+        Database.insert_new_archive_entry(
+            address=url, file_location=file_location, encoding=encoding)
+
+
+def calculate_file_difference(file_a_location, file_b_location, encoding="UTF-8"):
+    """ Calculates the difference percentage between two files according their paths given. """
+    try:
+        with open(file_a_location, "r", encoding=encoding) as file_a:
+            with open(file_b_location, "r", encoding=encoding) as file_b:
+                seq_mat = difflib.SequenceMatcher()
+                seq_mat.set_seqs(file_a.readlines(),
+                                 file_b.readlines())
+                percentage = seq_mat.ratio()
+                logger.debug(f"Got the archive difference at {percentage}")
+                return percentage
+    except Exception as ex:
+        logger.error(
+            f"Exception while calculating archive difference for {file_a_location} {file_b_location}. {ex}")
+        return None
+
+
+def calculate_content_difference(file_a_location, content_b, encoding="UTF-8"):
+    """ Calculates the difference percentage between the first fileand the second crawled content. """
+    try:
+        with open("./archive/temp.html", "w", encoding=encoding) as file:
+            file.write(content_b)
+            file.close()
+        with open(file_a_location, "r", encoding=encoding) as file_a:
+            with open("./archive/temp.html", "r", encoding=encoding) as file_b:
+                seq_mat = difflib.SequenceMatcher()
+                seq_mat.set_seqs(file_a.readlines(),
+                                 file_b.readlines())
+                percentage = seq_mat.ratio()
+                logger.debug(f"Got the archive difference at {percentage}")
+                return percentage
+    except Exception as ex:
+        logger.error(
+            f"Exception while calculating archive difference for {file_a_location} and content for second file. {ex}")
+        return None
