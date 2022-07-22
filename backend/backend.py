@@ -47,18 +47,23 @@ def main():
         response = None
         repeat_times = 1
         interval_seconds = 600
+        diff_threshold = 1.0
         crawl_url = env_variables.get_env_var("WEBPAGE_URL")
         try:
             if 'repeat_times' in request.args:
                 repeat_times = request.args.get('repeat_times')
             if 'interval_seconds' in request.args:
                 interval_seconds = request.args.get('interval_seconds')
+            if 'diff_threshold' in request.args:
+                diff_threshold = request.args.get('diff_threshold')
             if 'crawl_url' in request.args:
                 crawl_url = request.args.get('crawl_url')
-            current_app.logger.debug(
-                f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url}.")
+            current_app.logger.debug(f"""\
+                Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} \
+                using a {diff_threshold} threshold. \
+            """)
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
-                repeat_times), str(interval_seconds), str(crawl_url)])
+                repeat_times), str(interval_seconds), str(diff_threshold), str(crawl_url)])
             Database.insert_new_crawl_task(
                 SUB_PROCESS.pid, crawl_url, repeat_times, interval_seconds)
             response = jsonify(success=True, started=True)

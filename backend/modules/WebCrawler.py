@@ -15,11 +15,17 @@ class WebCrawler():
     def __init__(self):
         self.page_url = ""
         self.visited_urls = set()
+        self.diff_threshold = 1.0
 
     def set_page(self, url):
         """ Setter for the root page of the site to crawl. """
         self.page_url = url
         logger.debug(f"Setting root page to crawl: {url}")
+
+    def set_diff_threshold(self, value):
+        """ Setter for the difference threshold needed in order for a page archive to be taken. """
+        self.diff_threshold = value
+        logger.debug(f"Setting diff threshold: {value}")
 
     def get_root_page_links(self):
         """ Get and insert to DB all links found on root page. """
@@ -43,12 +49,12 @@ class WebCrawler():
                     encoding_a=last_archive[2],
                     encoding_b=WebCrawler.get_encoding(page_html_content)
                 )
-                if percentage != 1.0:
+                if percentage < self.diff_threshold:
                     self.save_page_content(
                         content=page_html_content, url=self.page_url, dif_ratio=percentage)
                 else:
                     logger.debug(
-                        "Crawled file content is the same as last archive, skipping saving.")
+                        "Crawled file diff threshold is same or greater from the minimum, skipping.")
 
             page_links = self.get_links(page_html_content)
             Database.insert_links_found(self.page_url, page_links)

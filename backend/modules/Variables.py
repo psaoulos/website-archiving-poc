@@ -9,6 +9,7 @@ logger = Logger.get_logger()
 # Default Value,, Required to be set by user on .env file where "-" is used
 env_variables = {
     "WEBPAGE_URL": "https://www.in.gr/",
+    "DIFF_THRESHOLD": "0.9",
     "MARIADB_IP": "-",
     "MARIADB_USER": "root",
     "MARIADB_ROOT_PASSWORD": "-",
@@ -33,6 +34,11 @@ class Variables():
                 env_variables["WEBPAGE_URL"] = f"http://{env_variables['WEBPAGE_URL']}"
         else:
             logger.debug("No WEBPAGE_URL env var found, defaulting.")
+
+        if "DIFF_THRESHOLD" in os.environ:
+            env_variables["DIFF_THRESHOLD"] = os.getenv('DIFF_THRESHOLD').strip()
+        else:
+            logger.debug("No DIFF_THRESHOLD env var found, defaulting to 0.9.")
 
         if "MARIADB_IP" in os.environ:
             env_variables["MARIADB_IP"] = os.getenv("MARIADB_IP").strip()
@@ -98,6 +104,7 @@ class Variables():
                 content = (
                     '# Please fill the following as instructed on the README.md file of project\n'
                     f'WEBPAGE_URL="{env_variables["WEBPAGE_URL"]}"\n'
+                    f'DIFF_THRESHOLD="{env_variables["DIFF_THRESHOLD"]}"\n'
                     f'MARIADB_IP="{env_variables["MARIADB_IP"]}"\n'
                     f'MARIADB_USER="{env_variables["MARIADB_USER"]}"\n'
                     f'MARIADB_ROOT_PASSWORD="{env_variables["MARIADB_ROOT_PASSWORD"]}"\n'

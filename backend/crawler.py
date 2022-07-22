@@ -23,6 +23,7 @@ def main():
     interval_seconds = 60
     arguments_sum = len(input_args) - 1
     argument_index = 1
+    diff_threshold = 1.0
     crawl_url = ''
     try:
         logger.info(f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on!")
@@ -32,9 +33,12 @@ def main():
             elif argument_index == 2:
                 interval_seconds = int(input_args[argument_index])
             elif argument_index == 3:
+                diff_threshold = float(input_args[argument_index])
+            elif argument_index == 4:
                 crawl_url = str(input_args[argument_index])
             argument_index = argument_index + 1
         my_crawler.set_page(crawl_url)
+        my_crawler.set_diff_threshold(diff_threshold)
         for index_y in range(repeat_times):
             logger.debug(f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')
             crawler_main()
