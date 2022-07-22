@@ -63,7 +63,8 @@ while $ask_user; do
         Yes)
             if $env_exists; then
                 if !([ -z "${WEBPAGE_URL}" ]); then
-                    sed -i -e "s*$WEBPAGE_URL*$new_webpage*g" $FILE
+                    # using sed Unix utility to parse and transform .env text
+                    sed -i '' -e "s*$WEBPAGE_URL*$new_webpage*g" $FILE
                 else
                     printf 'WEBPAGE_URL="'$new_webpage'"\n' >>$FILE
                 fi
