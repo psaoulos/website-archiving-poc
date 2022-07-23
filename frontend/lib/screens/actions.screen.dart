@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 
 enum CrawlerActions {
@@ -28,8 +29,43 @@ class _ActionsScreenState extends State<ActionsScreen> {
     text: '600',
   );
   TextEditingController ratioController = TextEditingController(
-    text: '1.000',
+    text: '5',
   );
+
+  void startCrawler() {
+    CrawlerApiService()
+        .startCrawler(
+      iterationsController.text,
+      intervalController.text,
+      ratioController.text,
+      urlController.text,
+    )
+        .then(
+      (response) {
+        if (response.success) {
+          if (response.started) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Crawler started!'),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Crawler allready running!'),
+              ),
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Something went wrong, please check Backend logs!'),
+            ),
+          );
+        }
+      },
+    );
+  }
 
   Widget _buildStartScreen() {
     return Form(
@@ -46,6 +82,21 @@ class _ActionsScreenState extends State<ActionsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Select the website to crawl over.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              'example: https://www.in.gr',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
                         const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Text('Crawl url: '),
@@ -72,6 +123,16 @@ class _ActionsScreenState extends State<ActionsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Select how many time and how often \n the crawler should take an archive.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
                         const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Text('Iterations: '),
@@ -124,6 +185,21 @@ class _ActionsScreenState extends State<ActionsScreen> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Select the minimum difference percentage \n between archives in order for them to be kept.',
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            Text(
+                              'Input 0 for keeping everything.\nInput 90 for keeping only files that are 90% or more different.',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                        const Spacer(),
                         const Padding(
                           padding: EdgeInsets.only(right: 5),
                           child: Text('Difference ratio: '),
@@ -132,18 +208,14 @@ class _ActionsScreenState extends State<ActionsScreen> {
                           width: 50,
                           child: TextFormField(
                             inputFormatters: [
-                              FilteringTextInputFormatter.allow(
-                                  RegExp(r'^\d*\.?\d{0,2}')),
+                              FilteringTextInputFormatter.digitsOnly
                             ],
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
                             controller: ratioController,
                             validator: (value) {
-                              double entry = double.parse(value!);
-                              if (value.isEmpty || entry > 1 || entry < 0) {
-                                if (entry == 1) {
-                                  return null;
-                                }
+                              int input = int.parse(value!);
+                              if (value.isEmpty || input > 100 || input < 0) {
                                 return '';
                               }
                               return null;
@@ -157,15 +229,16 @@ class _ActionsScreenState extends State<ActionsScreen> {
               ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              if (_formKey.currentState!.validate()) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Starting crawler')),
-                );
-              }
-            },
-            child: const Text('Start'),
+          Padding(
+            padding: const EdgeInsets.only(left: 10),
+            child: ElevatedButton(
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  startCrawler();
+                }
+              },
+              child: const Text('Start'),
+            ),
           ),
         ],
       ),

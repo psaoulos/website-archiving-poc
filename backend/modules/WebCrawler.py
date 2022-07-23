@@ -15,7 +15,7 @@ class WebCrawler():
     def __init__(self):
         self.page_url = ""
         self.visited_urls = set()
-        self.diff_threshold = 1.0
+        self.diff_threshold = 0.95
 
     def set_page(self, url):
         """ Setter for the root page of the site to crawl. """

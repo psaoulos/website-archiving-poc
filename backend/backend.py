@@ -22,7 +22,7 @@ def main():
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
 
-    @app.route('/crawler/status', methods=['GET', 'POST'])
+    @app.route('/crawler/status', methods=['GET'])
     @cross_origin()
     def crawler_status():
         response = None
@@ -40,28 +40,41 @@ def main():
             response = jsonify(success=False)
         return response
 
-    @app.route('/crawler/start', methods=['GET', 'POST'])
+    @app.route('/crawler/start', methods=['POST'])
     @cross_origin()
     def crawler_start():
         global SUB_PROCESS
         response = None
+        force_start = False
         repeat_times = 1
         interval_seconds = 600
-        diff_threshold = 1.0
+        diff_threshold = 95
         crawl_url = env_variables.get_env_var("WEBPAGE_URL")
         try:
-            if 'repeat_times' in request.args:
-                repeat_times = request.args.get('repeat_times')
-            if 'interval_seconds' in request.args:
-                interval_seconds = request.args.get('interval_seconds')
-            if 'diff_threshold' in request.args:
-                diff_threshold = request.args.get('diff_threshold')
-            if 'crawl_url' in request.args:
-                crawl_url = request.args.get('crawl_url')
-            current_app.logger.debug(f"""\
-                Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} \
-                using a {diff_threshold} threshold. \
-            """)
+            if 'force_start' in request.json:
+                force_start = request.json.get('force_start')
+
+            if SUB_PROCESS is not None:
+                process_running = SUB_PROCESS.poll()
+                if process_running is None:
+                    if force_start:
+                        current_app.logger.info("Got force_start True, killing old crawler.")
+                        SUB_PROCESS.kill()
+                    else:
+                        return jsonify(success=True, started=False)
+
+            if 'repeat_times' in request.json:
+                repeat_times = request.json.get('repeat_times')
+            if 'interval_seconds' in request.json:
+                interval_seconds = request.json.get('interval_seconds')
+            if 'diff_threshold' in request.json:
+                diff_threshold = request.json.get('diff_threshold')
+            if 'crawl_url' in request.json:
+                crawl_url = request.json.get('crawl_url')
+            current_app.logger.debug(
+                f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} " \
+                f"using a {diff_threshold}% threshold. " \
+            )
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(diff_threshold), str(crawl_url)])
             Database.insert_new_crawl_task(
@@ -72,7 +85,7 @@ def main():
             response = jsonify(success=False, started=False)
         return response
 
-    @app.route('/crawler/stop', methods=['GET', 'POST'])
+    @app.route('/crawler/stop', methods=['GET'])
     @cross_origin()
     def crawler_stop():
         global SUB_PROCESS

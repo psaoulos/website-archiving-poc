@@ -18,9 +18,28 @@ class CrawlerApiService {
     }
   }
 
-  Future<CrawlerStart> startCrawler() async {
-    final response =
-        await http.get(Uri.parse(backendAddress + backendStartEndpoint));
+  Future<CrawlerStart> startCrawler(
+    String repeatTimes,
+    String intervalSeconds,
+    String diffThreshold,
+    String crawlUrl,
+  ) async {
+    final queryParameters = {
+      'repeat_times': repeatTimes,
+      'interval_seconds': intervalSeconds,
+      'diff_threshold': diffThreshold,
+      'crawl_url': crawlUrl,
+    };
+    final jsonString = json.encode(queryParameters);
+    Map<String, String> headers = {
+      'Content-type': 'application/json',
+      'Accept': 'application/json',
+    };
+    final response = await http.post(
+      Uri.parse(backendAddress + backendStartEndpoint),
+      headers: headers,
+      body: jsonString,
+    );
 
     if (response.statusCode == 200) {
       return CrawlerStart.fromJson(jsonDecode(response.body));

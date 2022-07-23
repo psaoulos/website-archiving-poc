@@ -33,12 +33,12 @@ def main():
             elif argument_index == 2:
                 interval_seconds = int(input_args[argument_index])
             elif argument_index == 3:
-                diff_threshold = float(input_args[argument_index])
+                diff_threshold = int(input_args[argument_index])
             elif argument_index == 4:
                 crawl_url = str(input_args[argument_index])
             argument_index = argument_index + 1
         my_crawler.set_page(crawl_url)
-        my_crawler.set_diff_threshold(diff_threshold)
+        my_crawler.set_diff_threshold(diff_threshold/100)
         for index_y in range(repeat_times):
             logger.debug(f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')
             crawler_main()
