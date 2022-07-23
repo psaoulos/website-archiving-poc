@@ -13,7 +13,7 @@ class RunningIndicatorChip extends StatelessWidget {
       avatar: CircleAvatar(
         backgroundColor: isRunning ? Colors.green : Colors.grey,
       ),
-      label: Text(isRunning ? 'Running' : 'Stopped'),
+      label: Text(isRunning ? 'Running' : 'Finished'),
       deleteIcon: const Icon(Icons.refresh, color: Colors.black45),
       deleteButtonTooltipMessage: 'Refresh status',
       onDeleted: () {

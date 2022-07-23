@@ -55,7 +55,7 @@ class _MainScaffoldState extends State<MainScaffold> {
       onDrawerChanged: (isOpen) {
         if (!isOpen && _routeToNavigate != '') {
           String? currentRoute = ModalRoute.of(context)?.settings.name;
-          if (currentRoute != null && currentRoute != _routeToNavigate) {
+          if (currentRoute != null) {
             Timer(const Duration(milliseconds: 200), () {
               if (_routeToNavigate == ActionsScreen.routeName) {
                 Navigator.of(context).pushReplacementNamed(_routeToNavigate,
