@@ -277,3 +277,21 @@ def get_last_archive_entry(address):
     dbcur.close()
     dbcon.close()
     return result
+
+def delete_links_found(address):
+    """ Helper function for deleting all links from links_table giver the root_address. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        logger.debug(address)
+        query = (f"""
+            DELETE FROM links_table
+            WHERE root_address = '{address}'
+        """)
+        dbcur.execute(query)
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error deleting links_table transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()

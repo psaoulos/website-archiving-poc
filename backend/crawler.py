@@ -11,6 +11,7 @@ def crawler_main():
     env_variables.init_variables_from_env()
     start_time = time.time()
     my_crawler.get_root_page_links()
+    Database.delete_links_found(my_crawler.get_root_page_url())
     end_time = time.time()
     run_time = "{:.2f}".format(end_time - start_time)
     logger.debug(f"[pid:{os.getpid()}] Ended a crawl after {run_time} seconds")
@@ -37,7 +38,7 @@ def main():
             elif argument_index == 4:
                 crawl_url = str(input_args[argument_index])
             argument_index = argument_index + 1
-        my_crawler.set_page(crawl_url)
+        my_crawler.set_root_page_url(crawl_url)
         my_crawler.set_diff_threshold(diff_threshold/100)
         for index_y in range(repeat_times):
             logger.debug(f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')

@@ -17,10 +17,14 @@ class WebCrawler():
         self.visited_urls = set()
         self.diff_threshold = 0.95
 
-    def set_page(self, url):
+    def set_root_page_url(self, url):
         """ Setter for the root page of the site to crawl. """
         self.page_url = url
         logger.debug(f"Setting root page to crawl: {url}")
+
+    def get_root_page_url(self):
+        """ Getter for the root page of the site to crawl. """
+        return self.page_url
 
     def set_diff_threshold(self, value):
         """ Setter for the difference threshold needed in order for a page archive to be taken. """
@@ -70,7 +74,10 @@ class WebCrawler():
         clean_list = []
         for link in links:
             if link.has_attr('href'):
-                if link['href'].startswith(self.page_url) and link['href'] != self.page_url:
+                if (
+                    (link['href'].startswith(self.page_url) and link['href'] != self.page_url)
+                    or (link['href'].startswith('/') and link['href'] != '/')
+                ):
                     clean_list.append(link['href'])
         logger.debug(
             f"Going to iterate over {len(clean_list)}. Here goes nothing.")
