@@ -23,12 +23,14 @@ class CrawlerApiService {
     String intervalSeconds,
     String diffThreshold,
     String crawlUrl,
+    bool forceStart,
   ) async {
     final queryParameters = {
       'repeat_times': repeatTimes,
       'interval_seconds': intervalSeconds,
       'diff_threshold': diffThreshold,
       'crawl_url': crawlUrl,
+      'force_start': forceStart,
     };
     final jsonString = json.encode(queryParameters);
     Map<String, String> headers = {

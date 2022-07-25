@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
+import 'package:frontend/widgets/running_indicator_chip.widget.dart';
 import 'package:frontend/widgets/time_scale_dropdown.widget.dart';
 
 enum CrawlerActions {
@@ -20,6 +21,7 @@ class ActionsScreen extends StatefulWidget {
 
 class _ActionsScreenState extends State<ActionsScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _running = false;
   String _approximateTime = "";
   IntervalOptions _dropdownValue = IntervalOptions.seconds;
 
@@ -59,7 +61,16 @@ class _ActionsScreenState extends State<ActionsScreen> {
     });
 
     _approximateTime = calculateTimeFromSeconds(getSecondsFromUserInputs());
+    getCrawlerStatus();
     super.initState();
+  }
+
+  void getCrawlerStatus() {
+    CrawlerApiService().getCrawlerStatus().then((response) {
+      setState(() {
+        _running = response.running;
+      });
+    });
   }
 
   int getSecondsFromUserInputs() {
@@ -107,34 +118,184 @@ class _ActionsScreenState extends State<ActionsScreen> {
     });
   }
 
-  void startCrawler() {
+  void startCrawler(BuildContext context, bool forceStart) {
+    AlertDialog crawlerRunningAllert = AlertDialog(
+      title: const Text("Crawler allready running"),
+      content: const Text(
+          "Would you like to stop the old crawl job and run the currently selected one?"),
+      actions: [
+        TextButton(
+          child: const Text("No"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: const Text("Yes, Run"),
+          onPressed: () {
+            Navigator.of(context).pop();
+            startCrawler(context, true);
+          },
+        ),
+      ],
+    );
     CrawlerApiService()
         .startCrawler(
       _iterationsController.text,
       _intervalController.text,
       _ratioController.text,
       _urlController.text,
+      forceStart,
     )
         .then(
       (response) {
         if (response.success) {
           if (response.started) {
+            if (forceStart) {
+              ScaffoldMessenger.of(context).hideCurrentSnackBar();
+            }
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Crawler started!'),
+                content: Text(
+                  'Crawler started!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                backgroundColor: Colors.green,
               ),
             );
           } else {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Crawler allready running!'),
+                content: Text(
+                  'Crawler allready running!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
+            );
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return crawlerRunningAllert;
+              },
             );
           }
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Something went wrong, please check Backend logs!'),
+              content: Text(
+                'Something went wrong, please check Backend logs!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  void checkBeforeStopping(BuildContext context) {
+    AlertDialog confirmationAlert = AlertDialog(
+      title: const Text("Confirmation"),
+      content: const Text("Are you sure you want to terminate the crawl task?"),
+      actions: [
+        TextButton(
+          child: const Text("No"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: const Text("Yes, Stop"),
+          onPressed: () {
+            Navigator.of(context).pop();
+            stopCrawler(context);
+          },
+        ),
+      ],
+    );
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return confirmationAlert;
+      },
+    );
+  }
+
+  void stopCrawler(BuildContext context) {
+    AlertDialog crawlerNotRunningAlert = AlertDialog(
+      title: const Text("No Crawler running currently!"),
+      content: const Text(
+          "There is no active Crawl taks, would you like to start one?"),
+      actions: [
+        TextButton(
+          child: const Text("No"),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        TextButton(
+          child: const Text("Yes, Start"),
+          onPressed: () {
+            Navigator.of(context).pop();
+            Navigator.of(context).pushReplacementNamed(
+              ActionsScreen.routeName,
+              arguments: CrawlerActions.start,
+            );
+          },
+        ),
+      ],
+    );
+    CrawlerApiService().stopCrawler().then(
+      (response) {
+        if (response.success) {
+          if (response.stopped) {
+            setState(() {
+              _running = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Crawler stopped!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Crawler is not running!',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            );
+            showDialog(
+              context: context,
+              builder: (BuildContext context) {
+                return crawlerNotRunningAlert;
+              },
+            );
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Something went wrong, please check Backend logs!',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           );
         }
@@ -206,7 +367,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                               style: TextStyle(fontSize: 14),
                             ),
                             const Text(
-                              'Approximate completion time in:',
+                              'Approximate completion in:',
                               style:
                                   TextStyle(fontSize: 12, color: Colors.grey),
                             ),
@@ -327,7 +488,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
             child: ElevatedButton(
               onPressed: () {
                 if (_formKey.currentState!.validate()) {
-                  startCrawler();
+                  startCrawler(context, false);
                 }
               },
               child: const Text('Start'),
@@ -339,7 +500,36 @@ class _ActionsScreenState extends State<ActionsScreen> {
   }
 
   Widget _buildStopScreen() {
-    return Text('Stop');
+    return Row(
+      children: [
+        Card(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: Text('Crawler Status: '),
+                ),
+                RunningIndicatorChip(
+                  isRunning: _running,
+                  refreshFunction: getCrawlerStatus,
+                ),
+              ],
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(left: 10),
+          child: ElevatedButton(
+            onPressed: () {
+              checkBeforeStopping(context);
+            },
+            child: const Text('Stop'),
+          ),
+        ),
+      ],
+    );
   }
 
   @override
