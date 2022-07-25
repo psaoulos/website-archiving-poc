@@ -8,6 +8,7 @@ logger = Logger.get_logger()
 def calculate_difference_ratio(older_file, newer_file):
     """
     Calculates difference ratio between two archived files.
+    1.0 if the sequences are identical, and 0.0 if they have nothing in common.
     """
     try:
         with open(file=older_file, mode="r", encoding="UTF-8").readlines() as file_1:

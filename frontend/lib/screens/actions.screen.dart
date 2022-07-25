@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
+import 'package:frontend/widgets/time_scale_dropdown.widget.dart';
 
 enum CrawlerActions {
   start,
@@ -19,26 +20,100 @@ class ActionsScreen extends StatefulWidget {
 
 class _ActionsScreenState extends State<ActionsScreen> {
   final _formKey = GlobalKey<FormState>();
-  TextEditingController urlController = TextEditingController(
+  String _approximateTime = "";
+  IntervalOptions _dropdownValue = IntervalOptions.seconds;
+
+  final TextEditingController _urlController = TextEditingController(
     text: 'https://www.in.gr',
   );
-  TextEditingController iterationsController = TextEditingController(
+  final TextEditingController _iterationsController = TextEditingController(
     text: '10',
   );
-  TextEditingController intervalController = TextEditingController(
+  final TextEditingController _intervalController = TextEditingController(
     text: '600',
   );
-  TextEditingController ratioController = TextEditingController(
+  final TextEditingController _ratioController = TextEditingController(
     text: '5',
   );
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    _iterationsController.dispose();
+    _intervalController.dispose();
+    _ratioController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    _iterationsController.addListener(() {
+      setState(() {
+        _approximateTime = calculateTimeFromSeconds(getSecondsFromUserInputs());
+      });
+    });
+    _intervalController.addListener(() {
+      setState(() {
+        _approximateTime = calculateTimeFromSeconds(getSecondsFromUserInputs());
+      });
+    });
+
+    _approximateTime = calculateTimeFromSeconds(getSecondsFromUserInputs());
+    super.initState();
+  }
+
+  int getSecondsFromUserInputs() {
+    switch (_dropdownValue) {
+      case IntervalOptions.seconds:
+        return int.parse(_intervalController.text);
+      case IntervalOptions.minutes:
+        return int.parse(_intervalController.text) * 60;
+      case IntervalOptions.hours:
+        return int.parse(_intervalController.text) * 3600;
+      case IntervalOptions.days:
+        return int.parse(_intervalController.text) * 86400;
+      default:
+        return int.parse(_intervalController.text);
+    }
+  }
+
+  String calculateTimeFromSeconds(int totalSeconds) {
+    final iterations = int.parse(_iterationsController.text);
+    final Duration duration = Duration(seconds: totalSeconds * iterations);
+    final days = duration.inDays;
+    final hours = duration.inHours % 24;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+    String approx = "";
+    if (days > 0) {
+      approx = "$days Days";
+    }
+    if (hours > 0) {
+      approx = "$approx $hours Hours";
+    }
+    if (minutes > 0) {
+      approx = "$approx $minutes Minutes";
+    }
+    if (seconds > 0) {
+      approx = "$approx $seconds Seconds";
+    }
+    return approx;
+  }
+
+  void onTimeDropDownChange(IntervalOptions? newValue) {
+    setState(() {
+      _dropdownValue = newValue!;
+      _approximateTime = calculateTimeFromSeconds(getSecondsFromUserInputs());
+    });
+  }
 
   void startCrawler() {
     CrawlerApiService()
         .startCrawler(
-      iterationsController.text,
-      intervalController.text,
-      ratioController.text,
-      urlController.text,
+      _iterationsController.text,
+      _intervalController.text,
+      _ratioController.text,
+      _urlController.text,
     )
         .then(
       (response) {
@@ -104,7 +179,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                         SizedBox(
                           width: 250,
                           child: TextFormField(
-                            controller: urlController,
+                            controller: _urlController,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Please enter root URL to crawl over';
@@ -125,10 +200,20 @@ class _ActionsScreenState extends State<ActionsScreen> {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
+                          children: [
+                            const Text(
                               'Select how many time and how often \n the crawler should take an archive.',
                               style: TextStyle(fontSize: 14),
+                            ),
+                            const Text(
+                              'Approximate completion time in:',
+                              style:
+                                  TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                            Text(
+                              _approximateTime,
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -143,7 +228,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
                             ],
-                            controller: iterationsController,
+                            controller: _iterationsController,
                             validator: (value) {
                               if (value == null ||
                                   value.isEmpty ||
@@ -156,7 +241,11 @@ class _ActionsScreenState extends State<ActionsScreen> {
                         ),
                         const Padding(
                           padding: EdgeInsets.only(right: 5),
-                          child: Text('Interval (seconds): '),
+                          child: Text('Interval: '),
+                        ),
+                        TimeScaleDropdown(
+                          dropdownValue: _dropdownValue,
+                          onChanged: onTimeDropDownChange,
                         ),
                         SizedBox(
                           width: 40,
@@ -164,7 +253,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
                             ],
-                            controller: intervalController,
+                            controller: _intervalController,
                             validator: (value) {
                               if (value == null ||
                                   value.isEmpty ||
@@ -205,14 +294,14 @@ class _ActionsScreenState extends State<ActionsScreen> {
                           child: Text('Difference ratio: '),
                         ),
                         SizedBox(
-                          width: 50,
+                          width: 30,
                           child: TextFormField(
                             inputFormatters: [
                               FilteringTextInputFormatter.digitsOnly
                             ],
                             keyboardType: const TextInputType.numberWithOptions(
                                 decimal: true),
-                            controller: ratioController,
+                            controller: _ratioController,
                             validator: (value) {
                               int input = int.parse(value!);
                               if (value.isEmpty || input > 100 || input < 0) {
@@ -221,6 +310,10 @@ class _ActionsScreenState extends State<ActionsScreen> {
                               return null;
                             },
                           ),
+                        ),
+                        const Text(
+                          '%',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
                         ),
                       ],
                     ),

@@ -57,7 +57,7 @@ def main():
             if SUB_PROCESS is not None:
                 process_running = SUB_PROCESS.poll()
                 if process_running is None:
-                    if force_start:
+                    if force_start is True:
                         current_app.logger.info("Got force_start True, killing old crawler.")
                         SUB_PROCESS.kill()
                     else:

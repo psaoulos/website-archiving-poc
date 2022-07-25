@@ -24,8 +24,8 @@ class WebCrawler():
 
     def set_diff_threshold(self, value):
         """ Setter for the difference threshold needed in order for a page archive to be taken. """
-        self.diff_threshold = value
-        logger.debug(f"Setting diff threshold: {value}")
+        self.diff_threshold = 1.0 - value
+        logger.debug(f"Setting diff threshold: {1.0 - value}")
 
     def get_root_page_links(self):
         """ Get and insert to DB all links found on root page. """
