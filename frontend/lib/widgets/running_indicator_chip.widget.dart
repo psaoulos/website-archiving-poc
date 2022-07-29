@@ -9,17 +9,32 @@ class RunningIndicatorChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ThemeData mode = Theme.of(context);
+    bool isDarkMode = mode.brightness == Brightness.dark;
+
     return Chip(
       avatar: CircleAvatar(
-        backgroundColor: isRunning ? Colors.green : Colors.grey,
+        backgroundColor: isRunning
+            ? isDarkMode
+                ? Colors.green[800]
+                : Colors.green
+            : Colors.grey,
       ),
       label: Text(isRunning ? 'Running' : 'Finished'),
-      deleteIcon: const Icon(Icons.refresh, color: Colors.black45),
+      deleteIcon: isDarkMode
+          ? const Icon(Icons.refresh, color: Colors.black45)
+          : const Icon(Icons.refresh, color: Colors.black45),
       deleteButtonTooltipMessage: 'Refresh status',
       onDeleted: () {
         refreshFunction();
       },
-      backgroundColor: isRunning ? Colors.green[100] : Colors.grey[350],
+      backgroundColor: isRunning
+          ? isDarkMode
+              ? Colors.green[400]
+              : Colors.green[100]
+          : isDarkMode
+              ? Colors.grey[600]
+              : Colors.grey[350],
     );
   }
 }

@@ -26,7 +26,26 @@ class MyApp extends StatelessWidget {
         title: appName,
         theme: ThemeData(
           primarySwatch: Colors.blue,
+          brightness: Brightness.light,
         ),
+        darkTheme: ThemeData.from(
+          colorScheme: const ColorScheme.dark(),
+        ).copyWith(
+          textButtonTheme: TextButtonThemeData(
+            style: TextButton.styleFrom(),
+          ),
+          elevatedButtonTheme: ElevatedButtonThemeData(
+            style: ElevatedButton.styleFrom(
+              primary: Colors.blue,
+            ),
+          ),
+          outlinedButtonTheme: OutlinedButtonThemeData(
+            style: OutlinedButton.styleFrom(
+              primary: Colors.white,
+            ),
+          ),
+        ),
+        themeMode: ThemeMode.dark,
         initialRoute: DashboardScreen.routeName,
         onGenerateRoute: (settings) {
           final arguments = settings.arguments;
