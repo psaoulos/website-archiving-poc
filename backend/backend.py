@@ -2,12 +2,14 @@
 from __future__ import print_function, unicode_literals
 import subprocess
 import os
+from datetime import date
 from flask import Flask, jsonify, current_app, request
 from flask_cors import CORS, cross_origin
 from waitress import serve
 from modules import Variables, Database, FileSystem, Logger
 
 SUB_PROCESS = None
+SUB_PROCESS_ADDRESS = None
 
 
 def main():
@@ -44,6 +46,7 @@ def main():
     @cross_origin()
     def crawler_start():
         global SUB_PROCESS
+        global SUB_PROCESS_ADDRESS
         response = None
         force_start = False
         repeat_times = 1
@@ -58,8 +61,15 @@ def main():
                 process_running = SUB_PROCESS.poll()
                 if process_running is None:
                     if force_start is True:
-                        current_app.logger.info("Got force_start True, killing old crawler.")
+                        current_app.logger.info(
+                            "Got force_start True, killing old crawler.")
+                        proccess_id = SUB_PROCESS.pid
+                        crawl_url = SUB_PROCESS_ADDRESS
                         SUB_PROCESS.kill()
+                        SUB_PROCESS = None
+                        SUB_PROCESS_ADDRESS = None
+                        Database.update_finished_crawler(
+                            process_id=proccess_id, address=crawl_url, status="Stopped")
                     else:
                         return jsonify(success=True, started=False)
 
@@ -72,11 +82,12 @@ def main():
             if 'crawl_url' in request.json:
                 crawl_url = request.json.get('crawl_url')
             current_app.logger.debug(
-                f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} " \
-                f"using a {diff_threshold}% threshold. " \
+                f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} "
+                f"using a {diff_threshold}% threshold. "
             )
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(diff_threshold), str(crawl_url)])
+            SUB_PROCESS_ADDRESS = crawl_url
             Database.insert_new_crawl_task(
                 SUB_PROCESS.pid, crawl_url, repeat_times, interval_seconds)
             response = jsonify(success=True, started=True)
@@ -89,6 +100,7 @@ def main():
     @cross_origin()
     def crawler_stop():
         global SUB_PROCESS
+        global SUB_PROCESS_ADDRESS
         response = None
         try:
             if SUB_PROCESS is None:
@@ -100,8 +112,13 @@ def main():
                 if process_running is None:
                     # SUB_PROCESS.subprocess is alive
                     current_app.logger.info("Killing subprocess.")
+                    proccess_id = SUB_PROCESS.pid
+                    crawl_url = SUB_PROCESS_ADDRESS
                     SUB_PROCESS.kill()
                     SUB_PROCESS = None
+                    SUB_PROCESS_ADDRESS = None
+                    Database.update_finished_crawler(
+                        process_id=proccess_id, address=crawl_url, status="Stopped")
                     response = jsonify(success=True, stopped=True)
                 else:
                     current_app.logger.info(

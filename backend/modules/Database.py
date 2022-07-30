@@ -115,13 +115,13 @@ def init_database():
             dbcur.execute("""
             CREATE TABLE crawler_info (root_address NVARCHAR(255), iterations INT, iteration_interval INT, 
             current_iteration INT, started_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, process_id INT, 
-            running BOOLEAN DEFAULT TRUE, primary key(root_address, started_timestamp))
+            status NVARCHAR(255) DEFAULT 'Running', primary key(root_address, started_timestamp))
             """)
         if not check_if_table_exists(dbcon, "archive_index"):
             logger.debug("archive_index table did not exist, creating.")
             dbcur.execute("""
-            CREATE TABLE archive_index (root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
-            archive_encoding NVARCHAR(255), creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(root_address, creation_timestamp))
+            CREATE TABLE archive_index (id MEDIUMINT NOT NULL AUTO_INCREMENT, root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
+            archive_encoding NVARCHAR(255), creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(id))
             """)
     except mariadb.Error as ex:
         logger.error(f"Error creating table: {ex}")
@@ -176,7 +176,7 @@ def increment_crawler_step(process_id, address):
     try:
         query = (f"""
             UPDATE crawler_info SET current_iteration = current_iteration + 1 
-            WHERE root_address = '{address}' AND process_id = '{process_id}' AND running = 1
+            WHERE root_address = '{address}' AND process_id = '{process_id}' AND status = 'Running'
         """)
         dbcur.execute(query)
         dbcon.commit()
@@ -188,14 +188,14 @@ def increment_crawler_step(process_id, address):
     dbcon.close()
 
 
-def update_finished_crawler(process_id, address):
-    """ Helper function for incrementing crawler current_iteration. """
+def update_finished_crawler(process_id, address, status):
+    """ Helper function for updating crawler as finished. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
         query = (f"""
-            UPDATE crawler_info SET running = 0
-            WHERE root_address = '{address}' AND process_id = '{process_id}' AND running = 1
+            UPDATE crawler_info SET status = '{status}'
+            WHERE root_address = '{address}' AND process_id = '{process_id}' AND status = 'Running'
         """)
         dbcur.execute(query)
         dbcon.commit()
@@ -249,7 +249,8 @@ def insert_new_archive_entry(address, file_location, encoding, dif_ratio=None):
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
                 archive_index(root_address, file_location, var_ratio_from_last, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location, dif_ratio, encoding, timestamp))
+            dbcur.execute(query, (address, file_location,
+                          dif_ratio, encoding, timestamp))
         dbcon.commit()
     except Exception as ex:
         logger.error(f"Error committing archive_index transaction: {ex}")
@@ -257,8 +258,9 @@ def insert_new_archive_entry(address, file_location, encoding, dif_ratio=None):
     dbcur.close()
     dbcon.close()
 
+
 def get_last_archive_entry(address):
-    """ Helper function for getting the last entry from the archive_index table. """
+    """ Helper function for getting the last entry for an address from the archive_index table. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     result = ()
@@ -278,12 +280,12 @@ def get_last_archive_entry(address):
     dbcon.close()
     return result
 
+
 def delete_links_found(address):
     """ Helper function for deleting all links from links_table giver the root_address. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
-        logger.debug(address)
         query = (f"""
             DELETE FROM links_table
             WHERE root_address = '{address}'

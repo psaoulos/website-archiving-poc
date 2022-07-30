@@ -27,7 +27,8 @@ def main():
     diff_threshold = 1.0
     crawl_url = ''
     try:
-        logger.info(f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on!")
+        logger.info(
+            f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on!")
         while arguments_sum >= argument_index:
             if argument_index == 1:
                 repeat_times = int(input_args[argument_index])
@@ -41,20 +42,24 @@ def main():
         my_crawler.set_root_page_url(crawl_url)
         my_crawler.set_diff_threshold(diff_threshold/100)
         for index_y in range(repeat_times):
-            logger.debug(f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')
+            logger.debug(
+                f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')
             crawler_main()
-            logger.debug(f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} finished')
+            logger.debug(
+                f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} finished')
             if index_y + 1 < repeat_times:
                 time.sleep(int(interval_seconds))
                 Database.increment_crawler_step(os.getpid(), crawl_url)
             else:
-                Database.update_finished_crawler(os.getpid(), crawl_url)
+                Database.update_finished_crawler(
+                    os.getpid(), crawl_url, status="Finished")
     except Exception as exc:
         logger.error(f"[pid:{os.getpid()}] Error on crawler itteration, {exc}")
     if os.path.isfile("./archive/temp.html"):
         # Deleting temp file used for calculating diff ratio between archives
         os.remove("./archive/temp.html")
-    logger.info(f"[pid:{os.getpid()}] Crawler finished after {repeat_times} itterations!")
+    logger.info(
+        f"[pid:{os.getpid()}] Crawler finished after {repeat_times} itterations!")
 
 
 if __name__ == "__main__":
