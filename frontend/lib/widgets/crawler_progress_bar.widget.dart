@@ -17,34 +17,68 @@ class CrawlerProgressBar extends StatefulWidget {
 class _CrawlerProgressBarState extends State<CrawlerProgressBar>
     with TickerProviderStateMixin {
   late AnimationController controller;
-  bool finished = false;
+  bool _finished = false;
+  String _estimatedTimeLeft = "";
 
-  @override
-  void initState() {
+  int get _totalSeconds {
     final CrawlerProccess crawler = widget.status.crawlerInfo[0];
-    final int totalSeconds =
-        (crawler.iterations - 1) * (crawler.iterationInterval + 1.2).toInt() +
-            1;
+    return (crawler.iterations - 1) *
+            (crawler.iterationInterval + 1.2).toInt() +
+        1;
     // Assuming each crawl takes ≈ 1.2 seconds
+  }
+
+  int get _timeLeft {
+    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
+    final DateTime startedTimestamp = crawler.startedTimestamp;
+    final DateTime nowTimestamp = DateTime.now();
+    final int timeElapsed = nowTimestamp.difference(startedTimestamp).inSeconds;
+    return _totalSeconds - timeElapsed;
+  }
+
+  int get _currentIteration {
+    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
+    double temp = _timeLeft / (crawler.iterationInterval + 1);
+    return crawler.iterations - temp.toInt();
+  }
+
+  String get _estimatedDatetimeFinish {
+    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
+    if (crawler.iterationInterval == 1) {
+      return "2 Seconds";
+    }
+    final DateTime startedTimestamp = crawler.startedTimestamp;
+    final DateTime estimate =
+        startedTimestamp.add(Duration(seconds: _totalSeconds));
+    return DateFormat().format(estimate);
+  }
+
+  int get _estimatedSecondsLeft {
+    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
     final DateTime startedTimestamp = crawler.startedTimestamp;
     final DateTime nowTimestamp = DateTime.now();
     final DateTime estimateFinishTimestamp =
-        startedTimestamp.add(Duration(seconds: totalSeconds));
-    final int secondsLeft =
-        estimateFinishTimestamp.difference(nowTimestamp).inSeconds;
+        startedTimestamp.add(Duration(seconds: _totalSeconds));
+    return estimateFinishTimestamp.difference(nowTimestamp).inSeconds;
+  }
 
-    final double startingPercentage = 1 - (secondsLeft / totalSeconds);
+  @override
+  void initState() {
+    final double startingPercentage =
+        1 - (_estimatedSecondsLeft / _totalSeconds);
     controller = AnimationController(
       vsync: this,
-      duration: Duration(seconds: totalSeconds),
+      duration: Duration(seconds: _totalSeconds),
     )
       ..addListener(() {
-        setState(() {});
+        setState(() {
+          _estimatedTimeLeft = calculateEstimatedFinish();
+        });
       })
       ..addStatusListener((AnimationStatus status) {
         if (status == AnimationStatus.completed) {
           setState(() {
-            finished = true;
+            _finished = true;
           });
         }
       });
@@ -60,32 +94,26 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
     super.dispose();
   }
 
-  int get _currentIteration {
-    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
-    final int totalSeconds =
-        (crawler.iterations - 1) * (crawler.iterationInterval + 1.2).toInt() +
-            1;
-    // Assuming each crawl takes ≈ 1.2 seconds
-    final DateTime startedTimestamp = crawler.startedTimestamp;
-    final DateTime nowTimestamp = DateTime.now();
-    final int timeElapsed = nowTimestamp.difference(startedTimestamp).inSeconds;
-    final int timeLeft = totalSeconds - timeElapsed;
-    double temp = timeLeft / (crawler.iterationInterval + 1);
-    return crawler.iterations - temp.toInt();
-  }
-
-  String get _estimatedFinish {
-    final CrawlerProccess crawler = widget.status.crawlerInfo[0];
-    if (crawler.iterationInterval == 1) {
-      return "2 Seconds";
+  String calculateEstimatedFinish() {
+    final Duration duration = Duration(seconds: _estimatedSecondsLeft);
+    final days = duration.inDays;
+    final hours = duration.inHours % 24;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+    String approx = "";
+    if (days > 0) {
+      approx = "$days Days";
     }
-    final int totalSeconds =
-        (crawler.iterations - 1) * (crawler.iterationInterval + 1.2).toInt() +
-            1;
-    final DateTime startedTimestamp = crawler.startedTimestamp;
-    final DateTime estimate =
-        startedTimestamp.add(Duration(seconds: totalSeconds));
-    return DateFormat().format(estimate);
+    if (hours > 0) {
+      approx = "$approx $hours Hours";
+    }
+    if (minutes > 0) {
+      approx = "$approx $minutes Minutes";
+    }
+    if (seconds > 0) {
+      approx = "$approx $seconds Seconds";
+    }
+    return approx;
   }
 
   @override
@@ -161,9 +189,34 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
                             color: Colors.grey,
                           ),
                           children: <TextSpan>[
-                            const TextSpan(text: 'Finish on '),
+                            const TextSpan(text: 'Left:'),
                             TextSpan(
-                              text: _estimatedFinish,
+                              text: _estimatedTimeLeft,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RichText(
+                        text: TextSpan(
+                          style: const TextStyle(
+                            fontSize: 12.0,
+                            color: Colors.grey,
+                          ),
+                          children: <TextSpan>[
+                            const TextSpan(text: 'Finish on: '),
+                            TextSpan(
+                              text: _estimatedDatetimeFinish,
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
