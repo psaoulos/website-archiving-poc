@@ -26,6 +26,10 @@ dependencies:
   cupertino_icons: ^1.0.2
   provider: ^6.0.3
   http: ^0.13.4
+  intl: ^0.17.0
+  carousel_slider: ^4.1.1
+  syncfusion_flutter_core: ^20.2.40
+  syncfusion_flutter_datepicker: ^20.2.40
 
 dev_dependencies:
   flutter_test:

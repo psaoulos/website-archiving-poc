@@ -27,8 +27,9 @@ def main():
     diff_threshold = 1.0
     crawl_url = ''
     try:
+        total_start_time = time.time()
         logger.info(
-            f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on!")
+            f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on {crawl_url}!")
         while arguments_sum >= argument_index:
             if argument_index == 1:
                 repeat_times = int(input_args[argument_index])
@@ -58,8 +59,10 @@ def main():
     if os.path.isfile("./archive/temp.html"):
         # Deleting temp file used for calculating diff ratio between archives
         os.remove("./archive/temp.html")
+    total_end_time = time.time()
+    total_run_time = "{:.2f}".format(total_end_time - total_start_time)
     logger.info(
-        f"[pid:{os.getpid()}] Crawler finished after {repeat_times} itterations!")
+        f"[pid:{os.getpid()}] Crawler finished {repeat_times} itterations after {total_run_time} seconds!")
 
 
 if __name__ == "__main__":

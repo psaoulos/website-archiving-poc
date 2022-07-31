@@ -45,6 +45,8 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
+    String? currentPage = ModalRoute.of(context)?.settings.name;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
@@ -67,6 +69,19 @@ class _MainScaffoldState extends State<MainScaffold> {
           }
         }
       },
+      floatingActionButton: currentPage != DashboardScreen.routeName
+          ? FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).pushReplacementNamed(
+                  DashboardScreen.routeName,
+                );
+              },
+              tooltip: 'Go Back',
+              child: const Icon(
+                Icons.arrow_back,
+              ),
+            )
+          : Container(),
       body: widget.childWidget ?? Container(),
     );
   }

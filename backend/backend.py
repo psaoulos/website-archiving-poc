@@ -28,15 +28,17 @@ def main():
     @cross_origin()
     def crawler_status():
         response = None
+        crawler_status = []
         try:
             if SUB_PROCESS is None:
-                response = jsonify(success=True, running=False)
+                response = jsonify(success=True, running=False, crawlers=crawler_status)
             else:
                 process_running = SUB_PROCESS.poll()
                 if process_running is None:
-                    response = jsonify(success=True, running=True)
+                    crawler_status = Database.get_active_crawlers()
+                    response = jsonify(success=True, running=True, crawlers=crawler_status)
                 else:
-                    response = jsonify(success=True, running=False)
+                    response = jsonify(success=True, running=False, crawlers=crawler_status)
         except Exception as exc:
             current_app.logger.error(exc)
             response = jsonify(success=False)

@@ -207,6 +207,27 @@ def update_finished_crawler(process_id, address, status):
     dbcon.close()
 
 
+def get_active_crawlers():
+    """ Helper function for getting active crawlers. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = ("""
+            SELECT iterations, iteration_interval, current_iteration, started_timestamp
+            FROM crawler_info ci
+            WHERE status = 'Running'
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchall()
+    except Exception as ex:
+        logger.error(f"Error getting active crawlers transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result
+
+
 def insert_links_found(address, links):
     """ Helper function for inserting links on links_table, while ignoring duplicate entries. """
     list_to_add = []
