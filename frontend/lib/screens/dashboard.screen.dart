@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:frontend/models/crawler_status_response.model.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/centered_outlined_button.widget.dart';
+import 'package:frontend/widgets/crawler_progress_bar.widget.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 import 'package:frontend/widgets/running_indicator_chip.widget.dart';
 
@@ -16,19 +19,37 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   bool _running = false;
+  CrawlerStatusResponse? _crawlerStatus;
+  Timer? _timer;
 
   void getCrawlerStatus() {
     CrawlerApiService().getCrawlerStatus().then((response) {
       setState(() {
         _running = response.running;
+        _crawlerStatus = response;
       });
+      if (response.running) {
+        int iteration = 10;
+        if (response.crawlerInfo[0].iterationInterval > 10) {
+          iteration = response.crawlerInfo[0].iterationInterval;
+        }
+        _timer = Timer(Duration(seconds: iteration), () {
+          getCrawlerStatus();
+        });
+      }
     });
   }
 
   @override
   void initState() {
-    super.initState();
     getCrawlerStatus();
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -74,18 +95,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           buttonWidth: 150,
                           buttonOnClick: () {
                             Navigator.of(context).pushReplacementNamed(
-                                ActionsScreen.routeName,
-                                arguments: CrawlerActions.start);
+                              ActionsScreen.routeName,
+                              arguments: CrawlerActions.start,
+                            );
                           },
+                          padding: const EdgeInsets.only(bottom: 2.5),
                         ),
                         CenteredOutlinedButton(
                           buttonLabel: "Stop the Crawler",
                           buttonWidth: 150,
                           buttonOnClick: () {
                             Navigator.of(context).pushReplacementNamed(
-                                ActionsScreen.routeName,
-                                arguments: CrawlerActions.stop);
+                              ActionsScreen.routeName,
+                              arguments: CrawlerActions.stop,
+                            );
                           },
+                          padding: const EdgeInsets.only(bottom: 2.5),
                         ),
                         CenteredOutlinedButton(
                           buttonLabel: "See some Results",
@@ -102,6 +127,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 )
               ],
             ),
+            if (_crawlerStatus != null && _crawlerStatus!.totalCrawlers > 0)
+              CrawlerProgressBar(
+                width: 500,
+                status: _crawlerStatus as CrawlerStatusResponse,
+              ),
           ],
         );
       }),

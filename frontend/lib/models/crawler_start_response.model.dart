@@ -1,14 +1,14 @@
-class CrawlerStart {
+class CrawlerStartResponse {
   final bool success;
   final bool started;
 
-  const CrawlerStart({
+  const CrawlerStartResponse({
     required this.success,
     required this.started,
   });
 
-  factory CrawlerStart.fromJson(Map<String, dynamic> json) {
-    return CrawlerStart(
+  factory CrawlerStartResponse.fromJson(Map<String, dynamic> json) {
+    return CrawlerStartResponse(
       success: json['success'],
       started: json['started'],
     );
@@ -16,6 +16,6 @@ class CrawlerStart {
 
   @override
   String toString() {
-    return "CrawlerStart - success: $success, started: $started";
+    return "CrawlerStartResponse - success: $success, started: $started";
   }
 }

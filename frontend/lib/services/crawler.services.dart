@@ -1,24 +1,25 @@
 import 'dart:convert';
 
-import 'package:frontend/constants/crawler_service.constants.dart';
+import 'package:frontend/constants/services.constants.dart';
 import 'package:frontend/models/crawler_status_response.model.dart';
 import 'package:frontend/models/crawler_start_response.model.dart';
 import 'package:frontend/models/crawler_stop_response.model.dart';
 import 'package:http/http.dart' as http;
 
 class CrawlerApiService {
-  Future<CrawlerStatus> getCrawlerStatus() async {
-    final response =
-        await http.get(Uri.parse(backendAddress + backendStatusEndpoint));
+  Future<CrawlerStatusResponse> getCrawlerStatus() async {
+    final response = await http.get(
+      Uri.parse(backendAddress + backendCrawlerStatusEndpoint),
+    );
 
     if (response.statusCode == 200) {
-      return CrawlerStatus.fromJson(jsonDecode(response.body));
+      return CrawlerStatusResponse.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to load crawler status');
     }
   }
 
-  Future<CrawlerStart> startCrawler(
+  Future<CrawlerStartResponse> startCrawler(
     String repeatTimes,
     String intervalSeconds,
     String diffThreshold,
@@ -38,24 +39,25 @@ class CrawlerApiService {
       'Accept': 'application/json',
     };
     final response = await http.post(
-      Uri.parse(backendAddress + backendStartEndpoint),
+      Uri.parse(backendAddress + backendCrawlerStartEndpoint),
       headers: headers,
       body: jsonString,
     );
 
     if (response.statusCode == 200) {
-      return CrawlerStart.fromJson(jsonDecode(response.body));
+      return CrawlerStartResponse.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to start crawler');
     }
   }
 
-  Future<CrawlerStop> stopCrawler() async {
-    final response =
-        await http.get(Uri.parse(backendAddress + backendStopEndpoint));
+  Future<CrawlerStopResponse> stopCrawler() async {
+    final response = await http.get(
+      Uri.parse(backendAddress + backendCrawlerStopEndpoint),
+    );
 
     if (response.statusCode == 200) {
-      return CrawlerStop.fromJson(jsonDecode(response.body));
+      return CrawlerStopResponse.fromJson(jsonDecode(response.body));
     } else {
       throw Exception('Failed to stop crawler');
     }

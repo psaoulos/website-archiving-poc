@@ -1,14 +1,14 @@
-class CrawlerStop {
+class CrawlerStopResponse {
   final bool success;
   final bool stopped;
 
-  const CrawlerStop({
+  const CrawlerStopResponse({
     required this.success,
     required this.stopped,
   });
 
-  factory CrawlerStop.fromJson(Map<String, dynamic> json) {
-    return CrawlerStop(
+  factory CrawlerStopResponse.fromJson(Map<String, dynamic> json) {
+    return CrawlerStopResponse(
       success: json['success'],
       stopped: json['stopped'],
     );
@@ -16,6 +16,6 @@ class CrawlerStop {
 
   @override
   String toString() {
-    return "CrawlerStop - success: $success, stopped: $stopped";
+    return "CrawlerStopResponse - success: $success, stopped: $stopped";
   }
 }

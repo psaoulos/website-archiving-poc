@@ -74,6 +74,14 @@ class _ActionsScreenState extends State<ActionsScreen> {
   }
 
   int getSecondsFromUserInputs() {
+    if (_iterationsController.text == "" ||
+        _iterationsController.text == "0" ||
+        _iterationsController.text.isEmpty ||
+        _intervalController.text == "" ||
+        _intervalController.text == "0" ||
+        _intervalController.text.isEmpty) {
+      return -1;
+    }
     switch (_dropdownValue) {
       case IntervalOptions.seconds:
         return int.parse(_intervalController.text);
@@ -89,7 +97,16 @@ class _ActionsScreenState extends State<ActionsScreen> {
   }
 
   String calculateTimeFromSeconds(int totalSeconds) {
+    if (totalSeconds == -1 ||
+        _iterationsController.text == "" ||
+        _iterationsController.text == "0" ||
+        _iterationsController.text.isEmpty) {
+      return "To be determined!";
+    }
     final iterations = int.parse(_iterationsController.text);
+    if (iterations == 1) {
+      return "2 Seconds";
+    }
     final Duration duration = Duration(seconds: totalSeconds * iterations);
     final days = duration.inDays;
     final hours = duration.inHours % 24;
@@ -537,6 +554,8 @@ class _ActionsScreenState extends State<ActionsScreen> {
     return MainScaffold(
       title: widget.action == CrawlerActions.start ? 'Start' : 'Stop',
       childWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -547,8 +566,6 @@ class _ActionsScreenState extends State<ActionsScreen> {
             ],
           ),
         ],
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
       ),
     );
   }
