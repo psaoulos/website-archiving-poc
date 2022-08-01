@@ -113,14 +113,14 @@ def init_database():
         if not check_if_table_exists(dbcon, "crawler_info"):
             logger.debug("crawler_info table did not exist, creating.")
             dbcur.execute("""
-            CREATE TABLE crawler_info (root_address NVARCHAR(255), iterations INT, iteration_interval INT, 
+            CREATE TABLE crawler_info (id MEDIUMINT NOT NULL AUTO_INCREMENT, root_address NVARCHAR(255), iterations INT, iteration_interval INT, 
             current_iteration INT, started_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, process_id INT, 
-            status NVARCHAR(255) DEFAULT 'Running', primary key(root_address, started_timestamp))
+            status NVARCHAR(255) DEFAULT 'Running', primary key(id))
             """)
         if not check_if_table_exists(dbcon, "archive_index"):
             logger.debug("archive_index table did not exist, creating.")
             dbcur.execute("""
-            CREATE TABLE archive_index (id MEDIUMINT NOT NULL AUTO_INCREMENT, root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
+            CREATE TABLE archive_index (id MEDIUMINT NOT NULL AUTO_INCREMENT, crawler_id MEDIUMINT, root_address NVARCHAR(255), file_location NVARCHAR(255), var_ratio_from_last DOUBLE, 
             archive_encoding NVARCHAR(255), creation_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP, primary key(id))
             """)
     except mariadb.Error as ex:
@@ -148,7 +148,7 @@ def clean_table(table_name):
     dbcon.close()
 
 
-def insert_new_crawl_task(pid, address, iterations, interval):
+def insert_new_crawl_task(address, iterations, interval):
     """ Helper function for inserting new crawl tasks info on crawler_info table. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
@@ -157,16 +157,74 @@ def insert_new_crawl_task(pid, address, iterations, interval):
             Variables.get_env_var('TIME_ZONE')))
         query = (f"""
             INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-            crawler_info(root_address, iterations, iteration_interval, current_iteration, started_timestamp, process_id) VALUES (?, ?, ?, ?, ?, ?)
+            crawler_info(root_address, iterations, iteration_interval, current_iteration, started_timestamp) VALUES (?, ?, ?, ?, ?)
         """)
         dbcur.execute(query, (address, int(iterations),
-                      int(interval), 1, timestamp, int(pid)))
+                      int(interval), 1, timestamp))
         dbcon.commit()
     except Exception as ex:
         logger.error(f"Error committing crawler_info transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
+
+
+def update_new_crawl_task_pid(address, iterations, interval, pid):
+    """ Helper function for updating new crawl tasks with pid. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        query = (f"""
+            UPDATE crawler_info SET process_id = {int(pid)}
+            WHERE root_address = '{address}' AND iterations = '{iterations}' AND iteration_interval = '{interval}' AND status = 'Running'
+        """)
+        dbcur.execute(query)
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error committing crawler_info transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def update_new_crawl_task_address(address, iterations, interval, pid):
+    """ Helper function for updating new crawl tasks with root_address. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    try:
+        query = (f"""
+            UPDATE crawler_info SET root_address = '{address}'
+            WHERE iterations = '{iterations}' AND iteration_interval = '{interval}' AND status = 'Running' AND process_id = '{pid}'
+        """)
+        dbcur.execute(query)
+        dbcon.commit()
+    except Exception as ex:
+        logger.error(f"Error committing crawler_info transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+
+
+def get_current_crawl_task_id(pid, address, iterations, interval):
+    """ Helper function for getting the crawler id of current crawl task. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT id
+            FROM crawler_info ci
+            WHERE root_address = '{address}' AND iterations = '{iterations}' AND iteration_interval = '{interval}'
+            AND process_id = '{pid}' AND status = 'Running'
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchone()
+    except Exception as ex:
+        logger.error(f"Error selecting from archive_index transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result
 
 
 def increment_crawler_step(process_id, address):
@@ -252,7 +310,7 @@ def insert_links_found(address, links):
     dbcon.close()
 
 
-def insert_new_archive_entry(address, file_location, encoding, dif_ratio=None):
+def insert_new_archive_entry(address, file_location, encoding, crawler_id, dif_ratio=None):
     """ Helper function for inserting entry for new archive kept for specific address. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
@@ -262,15 +320,16 @@ def insert_new_archive_entry(address, file_location, encoding, dif_ratio=None):
         if dif_ratio is None:
             query = (f"""
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-                archive_index(root_address, file_location, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?)
+                archive_index(crawler_id, root_address, file_location, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location, encoding, timestamp))
+            dbcur.execute(query, (crawler_id, address,
+                          file_location, encoding, timestamp))
         else:
             query = (f"""
                 INSERT INTO {env_variables.get_env_var('MARIADB_DATABASE')}.
-                archive_index(root_address, file_location, var_ratio_from_last, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?)
+                archive_index(crawler_id, root_address, file_location, var_ratio_from_last, archive_encoding, creation_timestamp) VALUES (?, ?, ?, ?, ?, ?)
             """)
-            dbcur.execute(query, (address, file_location,
+            dbcur.execute(query, (crawler_id, address, file_location,
                           dif_ratio, encoding, timestamp))
         dbcon.commit()
     except Exception as ex:
@@ -318,3 +377,68 @@ def delete_links_found(address):
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
+
+
+def get_distinct_archive_addresses():
+    """ Helper function for getting distinct root_address from archive_index. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = ("""
+            SELECT DISTINCT root_address
+            FROM archive_index
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchall()
+    except Exception as ex:
+        logger.error(f"Error getting all archive addresses, transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result
+
+
+def get_first_archive_taken(address):
+    """ Helper function for getting the first archive taken for an address. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT creation_timestamp
+            FROM archive_index ai
+            WHERE root_address = '{address}'
+            ORDER BY creation_timestamp ASC LIMIT 1
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchone()
+    except Exception as ex:
+        logger.error(f"Error getting archive in date range, transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result
+
+
+def get_archives_in_date_range(address, start_date, end_date):
+    """ Helper function for getting all archives taken inside date range given. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT *
+            FROM archive_index
+            WHERE creation_timestamp >= '{start_date}'
+            AND creation_timestamp <  '{end_date}'
+            AND address = '{address}'
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchall()
+    except Exception as ex:
+        logger.error(f"Error getting archive in date range, transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result

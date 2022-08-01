@@ -22,7 +22,8 @@ env_variables = {
 
 class Variables():
     """ Class used for env variables handling. """
-    def init_variables_from_env(self):
+    @staticmethod
+    def init_variables_from_env():
         """ Load and check env variables. """
 
         if "WEBPAGE_URL" in os.environ:
@@ -50,7 +51,7 @@ class Variables():
             else:
                 logger.error("No MARIADB_IP env var found, "
                              "please specify in on root .env or consider running the docker-compose version.")
-                self.provide_var_template_and_exit()
+                Variables.provide_var_template_and_exit()
 
         if "MARIADB_USER" in os.environ:
             env_variables["MARIADB_USER"] = os.getenv("MARIADB_USER").strip()
@@ -66,7 +67,7 @@ class Variables():
             else:
                 logger.error(
                     "No MARIADB_ROOT_PASSWORD env var found, please specify it on root .env.")
-                self.provide_var_template_and_exit()
+                Variables.provide_var_template_and_exit()
         else:
             if "MARIADB_PASSWORD" in os.environ:
                 env_variables["MARIADB_PASSWORD"] = os.getenv(
@@ -74,7 +75,7 @@ class Variables():
             else:
                 logger.error(
                     "No MARIADB_PASSWORD env var found, please specify it on root .env.")
-                self.provide_var_template_and_exit()
+                Variables.provide_var_template_and_exit()
 
         if "MARIADB_PORT" in os.environ:
             env_variables["MARIADB_PORT"] = int(
@@ -88,7 +89,7 @@ class Variables():
         else:
             logger.error(
                 "No MARIADB_DATABASE env var found, please specify it on root .env.")
-            self.provide_var_template_and_exit()
+            Variables.provide_var_template_and_exit()
 
         if "TIME_ZONE" in os.environ:
             env_variables["TIME_ZONE"] = os.getenv("TIME_ZONE").strip()

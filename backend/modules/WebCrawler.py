@@ -1,6 +1,7 @@
 """ Module containting the core webcrawler functionality. """
 import ssl
 import re
+import os
 import requests
 from urllib3 import poolmanager
 from bs4 import BeautifulSoup, SoupStrainer
@@ -13,9 +14,24 @@ class WebCrawler():
     """ The core webcrawler functionality. """
 
     def __init__(self):
+        self.crawler_id = 0
         self.page_url = ""
         self.visited_urls = set()
         self.diff_threshold = 0.95
+        self.iterations = 0
+        self.iteration_interval = 0
+
+    def set_crawler_id(self, new_id):
+        """ Setter for the crawl id assigned on crawl task creation. """
+        if new_id is not None:
+            self.crawler_id = new_id
+            logger.debug(f"Setting crawler id: {new_id}")
+        else:
+            logger.error("Got no results from db after searching for crawler id")
+
+    def get_crawler_id(self):
+        """ Getter for the crawl id assigned on crawl task creation. """
+        return self.crawler_id
 
     def set_root_page_url(self, url):
         """ Setter for the root page of the site to crawl. """
@@ -25,6 +41,14 @@ class WebCrawler():
     def get_root_page_url(self):
         """ Getter for the root page of the site to crawl. """
         return self.page_url
+
+    def set_iterations(self, iterations):
+        """ Setter for the requested iterations. """
+        self.iterations = iterations
+
+    def set_iterations_interval(self, interval):
+        """ Setter for the requested iteration interval. """
+        self.iteration_interval = interval
 
     def set_diff_threshold(self, value):
         """ Setter for the difference threshold needed in order for a page archive to be taken. """
@@ -44,7 +68,7 @@ class WebCrawler():
                 logger.debug(
                     "First crawl for requested address, gonna save archive.")
                 self.save_page_content(
-                    content=page_html_content, url=self.page_url, dif_ratio=None)
+                    content=page_html_content, url=self.page_url, dif_ratio=None, crawler_id=self.crawler_id)
             else:
                 percentage = FileSystem.calculate_content_difference(
                     file_a_location=last_archive[0],
@@ -53,9 +77,9 @@ class WebCrawler():
                     encoding_a=last_archive[2],
                     encoding_b=WebCrawler.get_encoding(page_html_content)
                 )
-                if percentage < self.diff_threshold:
+                if percentage <= self.diff_threshold:
                     self.save_page_content(
-                        content=page_html_content, url=self.page_url, dif_ratio=percentage)
+                        content=page_html_content, url=self.page_url, dif_ratio=percentage, crawler_id=self.crawler_id)
                 else:
                     logger.debug(
                         "Crawled file diff threshold is same or greater from the minimum, skipping.")
@@ -99,6 +123,7 @@ class WebCrawler():
             logger.debug(
                 f"Original url redirects to {page_session.url}, updating root url.")
             self.page_url = page_session.url
+            Database.update_new_crawl_task_address(address= page_session.url, iterations= self.iterations, interval= self.iteration_interval, pid=int(os.getpid()))
 
     @staticmethod
     def get_html_content(url):
@@ -114,13 +139,14 @@ class WebCrawler():
         return page_html.content
 
     @staticmethod
-    def save_page_content(content, url, dif_ratio):
+    def save_page_content(content, url, dif_ratio, crawler_id):
         """ Save page html content to file system. """
         FileSystem.save_page(
             content=BeautifulSoup(content, "html.parser").prettify(),
             url=url,
             encoding=WebCrawler.get_encoding(content),
-            dif_ratio=dif_ratio
+            dif_ratio=dif_ratio,
+            crawler_id=crawler_id
         )
 
     @staticmethod

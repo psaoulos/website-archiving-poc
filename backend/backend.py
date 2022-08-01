@@ -40,7 +40,7 @@ def main():
                 else:
                     response = jsonify(success=True, running=False, crawlers=crawler_status)
         except Exception as exc:
-            current_app.logger.error(exc)
+            current_app.logger.error(exc, exc_info=True)
             response = jsonify(success=False)
         return response
 
@@ -87,14 +87,14 @@ def main():
                 f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} "
                 f"using a {diff_threshold}% threshold. "
             )
+            Database.insert_new_crawl_task(crawl_url, repeat_times, interval_seconds)
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(diff_threshold), str(crawl_url)])
             SUB_PROCESS_ADDRESS = crawl_url
-            Database.insert_new_crawl_task(
-                SUB_PROCESS.pid, crawl_url, repeat_times, interval_seconds)
+            Database.update_new_crawl_task_pid(crawl_url, repeat_times, interval_seconds, int(SUB_PROCESS.pid))
             response = jsonify(success=True, started=True)
         except Exception as exc:
-            current_app.logger.error(exc)
+            current_app.logger.error(exc, exc_info=True)
             response = jsonify(success=False, started=False)
         return response
 

@@ -58,7 +58,7 @@ def make_day_folder():
     return sub_dir_name
 
 
-def save_page(content, url, encoding, dif_ratio):
+def save_page(content, url, encoding, dif_ratio, crawler_id):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
     name = datetime.now(
@@ -73,7 +73,7 @@ def save_page(content, url, encoding, dif_ratio):
         os.chdir(root_dir)
         logger.debug(f"{name} snaphot saved.")
         Database.insert_new_archive_entry(
-            address=url, file_location=file_location, encoding=encoding, dif_ratio=dif_ratio)
+            address=url, file_location=file_location, encoding=encoding, crawler_id=crawler_id, dif_ratio=dif_ratio)
 
 
 def calculate_file_difference(file_a_location, file_b_location, encoding_a="UTF-8", encoding_b="UTF-8"):
