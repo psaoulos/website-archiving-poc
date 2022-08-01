@@ -27,8 +27,6 @@ def main():
     try:
         total_start_time = time.time()
         Variables.init_variables_from_env()
-        logger.info(
-            f"[pid:{os.getpid()}] Crawler started for {repeat_times} itterations on {crawl_url}!")
         while arguments_sum >= argument_index:
             if argument_index == 1:
                 repeat_times = int(input_args[argument_index])
@@ -40,12 +38,16 @@ def main():
                 crawl_url = str(input_args[argument_index])
             argument_index = argument_index + 1
         parent_crawler_id = Database.get_current_crawl_task_id(
-        pid=int(os.getpid()), address=crawl_url, iterations=repeat_times, interval=interval_seconds)
+            pid=int(os.getpid()), address=crawl_url, iterations=repeat_times, interval=interval_seconds)
         my_crawler.set_crawler_id(parent_crawler_id[0])
         my_crawler.set_root_page_url(crawl_url)
         my_crawler.set_diff_threshold(diff_threshold/100)
         my_crawler.set_iterations(repeat_times)
         my_crawler.set_iterations_interval(interval_seconds)
+        logger.info(
+            f"[pid:{os.getpid()}][crawler_id:{parent_crawler_id[0]}] Crawler started for {repeat_times}"
+            f" itterations ({interval_seconds} seconds interval) on {crawl_url}!"
+        )
         for index_y in range(repeat_times):
             logger.debug(
                 f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} started')
@@ -54,12 +56,14 @@ def main():
                 f'[pid:{os.getpid()}] Itteration {index_y+1} / {repeat_times} finished')
             if index_y + 1 < repeat_times:
                 time.sleep(int(interval_seconds))
-                Database.increment_crawler_step(os.getpid(), my_crawler.get_root_page_url())
+                Database.increment_crawler_step(
+                    os.getpid(), my_crawler.get_root_page_url())
             else:
                 Database.update_finished_crawler(
-                    os.getpid(), my_crawler.get_root_page_url(), status="Finished")
+                    my_crawler.get_crawler_id(), status="Finished")
     except Exception as exc:
-        logger.error(f"[pid:{os.getpid()}] Error on crawler itteration, {exc}", exc_info=True)
+        logger.error(
+            f"[pid:{os.getpid()}] Error on crawler itteration, {exc}", exc_info=True)
     if os.path.isfile("./archive/temp.html"):
         # Deleting temp file used for calculating diff ratio between archives
         os.remove("./archive/temp.html")

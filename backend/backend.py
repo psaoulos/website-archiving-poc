@@ -9,7 +9,7 @@ from waitress import serve
 from modules import Variables, Database, FileSystem, Logger
 
 SUB_PROCESS = None
-SUB_PROCESS_ADDRESS = None
+SUB_PROCESS_CRAWLER_ID = None
 
 
 def main():
@@ -31,14 +31,17 @@ def main():
         crawler_status = []
         try:
             if SUB_PROCESS is None:
-                response = jsonify(success=True, running=False, crawlers=crawler_status)
+                response = jsonify(success=True, running=False,
+                                   crawlers=crawler_status)
             else:
                 process_running = SUB_PROCESS.poll()
                 if process_running is None:
                     crawler_status = Database.get_active_crawlers()
-                    response = jsonify(success=True, running=True, crawlers=crawler_status)
+                    response = jsonify(
+                        success=True, running=True, crawlers=crawler_status)
                 else:
-                    response = jsonify(success=True, running=False, crawlers=crawler_status)
+                    response = jsonify(
+                        success=True, running=False, crawlers=crawler_status)
         except Exception as exc:
             current_app.logger.error(exc, exc_info=True)
             response = jsonify(success=False)
@@ -48,7 +51,7 @@ def main():
     @cross_origin()
     def crawler_start():
         global SUB_PROCESS
-        global SUB_PROCESS_ADDRESS
+        global SUB_PROCESS_CRAWLER_ID
         response = None
         force_start = False
         repeat_times = 1
@@ -65,13 +68,11 @@ def main():
                     if force_start is True:
                         current_app.logger.info(
                             "Got force_start True, killing old crawler.")
-                        proccess_id = SUB_PROCESS.pid
-                        crawl_url = SUB_PROCESS_ADDRESS
                         SUB_PROCESS.kill()
-                        SUB_PROCESS = None
-                        SUB_PROCESS_ADDRESS = None
                         Database.update_finished_crawler(
-                            process_id=proccess_id, address=crawl_url, status="Stopped")
+                            crawler_id=SUB_PROCESS_CRAWLER_ID, status="Stopped")
+                        SUB_PROCESS = None
+                        SUB_PROCESS_CRAWLER_ID = None
                     else:
                         return jsonify(success=True, started=False)
 
@@ -87,11 +88,13 @@ def main():
                 f"Going to repeat {repeat_times} times by {interval_seconds} seconds interval on {crawl_url} "
                 f"using a {diff_threshold}% threshold. "
             )
-            Database.insert_new_crawl_task(crawl_url, repeat_times, interval_seconds)
+            crawler_id = Database.insert_new_crawl_task(
+                crawl_url, repeat_times, interval_seconds)
+            SUB_PROCESS_CRAWLER_ID = crawler_id
             SUB_PROCESS = subprocess.Popen(["python3", "crawler.py", str(
                 repeat_times), str(interval_seconds), str(diff_threshold), str(crawl_url)])
-            SUB_PROCESS_ADDRESS = crawl_url
-            Database.update_new_crawl_task_pid(crawl_url, repeat_times, interval_seconds, int(SUB_PROCESS.pid))
+            Database.update_new_crawl_task_pid(
+                crawler_id, int(SUB_PROCESS.pid))
             response = jsonify(success=True, started=True)
         except Exception as exc:
             current_app.logger.error(exc, exc_info=True)
@@ -102,7 +105,7 @@ def main():
     @cross_origin()
     def crawler_stop():
         global SUB_PROCESS
-        global SUB_PROCESS_ADDRESS
+        global SUB_PROCESS_CRAWLER_ID
         response = None
         try:
             if SUB_PROCESS is None:
@@ -114,13 +117,11 @@ def main():
                 if process_running is None:
                     # SUB_PROCESS.subprocess is alive
                     current_app.logger.info("Killing subprocess.")
-                    proccess_id = SUB_PROCESS.pid
-                    crawl_url = SUB_PROCESS_ADDRESS
                     SUB_PROCESS.kill()
-                    SUB_PROCESS = None
-                    SUB_PROCESS_ADDRESS = None
                     Database.update_finished_crawler(
-                        process_id=proccess_id, address=crawl_url, status="Stopped")
+                        crawler_id=SUB_PROCESS_CRAWLER_ID, status="Stopped")
+                    SUB_PROCESS = None
+                    SUB_PROCESS_CRAWLER_ID = None
                     response = jsonify(success=True, stopped=True)
                 else:
                     current_app.logger.info(

@@ -152,6 +152,7 @@ def insert_new_crawl_task(address, iterations, interval):
     """ Helper function for inserting new crawl tasks info on crawler_info table. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
+    inserted_id = None
     try:
         timestamp = datetime.now(pytz.timezone(
             Variables.get_env_var('TIME_ZONE')))
@@ -162,21 +163,23 @@ def insert_new_crawl_task(address, iterations, interval):
         dbcur.execute(query, (address, int(iterations),
                       int(interval), 1, timestamp))
         dbcon.commit()
+        inserted_id = dbcur.lastrowid
     except Exception as ex:
         logger.error(f"Error committing crawler_info transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
+    return inserted_id
 
 
-def update_new_crawl_task_pid(address, iterations, interval, pid):
+def update_new_crawl_task_pid(crawler_id, pid):
     """ Helper function for updating new crawl tasks with pid. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
         query = (f"""
             UPDATE crawler_info SET process_id = {int(pid)}
-            WHERE root_address = '{address}' AND iterations = '{iterations}' AND iteration_interval = '{interval}' AND status = 'Running'
+            WHERE id = '{crawler_id}'
         """)
         dbcur.execute(query)
         dbcon.commit()
@@ -246,20 +249,24 @@ def increment_crawler_step(process_id, address):
     dbcon.close()
 
 
-def update_finished_crawler(process_id, address, status):
+def update_finished_crawler(crawler_id, status):
     """ Helper function for updating crawler as finished. """
+    if crawler_id is None:
+        logger.error(
+            "Error updating crawler_info got None crawler_id")
+        return
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     try:
         query = (f"""
             UPDATE crawler_info SET status = '{status}'
-            WHERE root_address = '{address}' AND process_id = '{process_id}' AND status = 'Running'
+            WHERE id = '{crawler_id}'
         """)
         dbcur.execute(query)
         dbcon.commit()
     except Exception as ex:
         logger.error(
-            f"Error updating crawler_info for finished {process_id} transaction: {ex}")
+            f"Error updating crawler_info for crawler_id {crawler_id} transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
