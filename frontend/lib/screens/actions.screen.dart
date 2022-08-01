@@ -210,6 +210,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              backgroundColor: Colors.red,
             ),
           );
         }

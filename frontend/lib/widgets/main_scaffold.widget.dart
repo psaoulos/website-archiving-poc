@@ -1,10 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/main.provider.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:frontend/widgets/main_drawer.widget.dart';
+import 'package:provider/provider.dart';
 
 class MainScaffold extends StatefulWidget {
   final Widget? childWidget;
@@ -46,10 +48,34 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     String? currentPage = ModalRoute.of(context)?.settings.name;
+    final mainProvider = Provider.of<MainProvider>(context, listen: true);
 
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        actions: <Widget>[
+          Padding(
+              padding: const EdgeInsets.only(right: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      mainProvider.darkMode ? Icons.nightlight : Icons.wb_sunny,
+                      color: Colors.white,
+                    ),
+                    onPressed: null,
+                  ),
+                  Switch(
+                    value: mainProvider.darkMode,
+                    onChanged: (value) {
+                      mainProvider.toggleTheme();
+                    },
+                  ),
+                ],
+              )),
+        ],
       ),
       drawer: MainDrawer(
         setOptionPressed: _setOptionPressed,

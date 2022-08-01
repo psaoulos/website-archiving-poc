@@ -62,6 +62,31 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
     return estimateFinishTimestamp.difference(nowTimestamp).inSeconds;
   }
 
+  String getTimeRangeFromSeconds(int secs) {
+    if (secs <= 0) {
+      return "Done";
+    }
+    final Duration duration = Duration(seconds: secs);
+    final days = duration.inDays;
+    final hours = duration.inHours % 24;
+    final minutes = duration.inMinutes % 60;
+    final seconds = duration.inSeconds % 60;
+    String approx = "";
+    if (days > 0) {
+      approx = "$days Days";
+    }
+    if (hours > 0) {
+      approx = "$approx $hours Hours";
+    }
+    if (minutes > 0) {
+      approx = "$approx $minutes Minutes";
+    }
+    if (seconds > 0) {
+      approx = "$approx $seconds Seconds";
+    }
+    return approx.trim();
+  }
+
   @override
   void initState() {
     final double startingPercentage =
@@ -72,7 +97,7 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
     )
       ..addListener(() {
         setState(() {
-          _estimatedTimeLeft = calculateEstimatedFinish();
+          _estimatedTimeLeft = getTimeRangeFromSeconds(_estimatedSecondsLeft);
         });
       })
       ..addStatusListener((AnimationStatus status) {
@@ -94,28 +119,6 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
     super.dispose();
   }
 
-  String calculateEstimatedFinish() {
-    final Duration duration = Duration(seconds: _estimatedSecondsLeft);
-    final days = duration.inDays;
-    final hours = duration.inHours % 24;
-    final minutes = duration.inMinutes % 60;
-    final seconds = duration.inSeconds % 60;
-    String approx = "";
-    if (days > 0) {
-      approx = "$days Days";
-    }
-    if (hours > 0) {
-      approx = "$approx $hours Hours";
-    }
-    if (minutes > 0) {
-      approx = "$approx $minutes Minutes";
-    }
-    if (seconds > 0) {
-      approx = "$approx $seconds Seconds";
-    }
-    return approx;
-  }
-
   @override
   Widget build(BuildContext context) {
     if (widget.status.totalCrawlers != 0) {
@@ -133,6 +136,7 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
                 LinearProgressIndicator(
                   value: controller.value,
                   semanticsLabel: 'Linear progress indicator',
+                  color: _finished ? Colors.green : Colors.blue,
                 ),
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
@@ -161,16 +165,15 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const TextSpan(text: ' on '),
+                            const TextSpan(text: ' ('),
                             TextSpan(
-                              text: widget
-                                  .status.crawlerInfo[0].iterationInterval
-                                  .toString(),
+                              text: getTimeRangeFromSeconds(widget
+                                  .status.crawlerInfo[0].iterationInterval),
                               style: const TextStyle(
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            const TextSpan(text: ' seconds interval.'),
+                            const TextSpan(text: ' interval).'),
                           ],
                         ),
                       )
@@ -189,7 +192,7 @@ class _CrawlerProgressBarState extends State<CrawlerProgressBar>
                             color: Colors.grey,
                           ),
                           children: <TextSpan>[
-                            const TextSpan(text: 'Left:'),
+                            const TextSpan(text: 'Left: '),
                             TextSpan(
                               text: _estimatedTimeLeft,
                               style: const TextStyle(
