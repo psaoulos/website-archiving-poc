@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
+import 'package:frontend/screens/logs.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:provider/provider.dart';
 import 'package:frontend/providers/main.provider.dart';
@@ -69,6 +70,11 @@ class MyApp extends StatelessWidget {
         } else if (settings.name == ResultsScreen.routeName) {
           return PageRouteBuilder(
             pageBuilder: (_, __, ___) => ResultsScreen(),
+            settings: settings,
+          );
+        } else if (settings.name == LogsScreen.routeName) {
+          return PageRouteBuilder(
+            pageBuilder: (_, __, ___) => LogsScreen(),
             settings: settings,
           );
         }

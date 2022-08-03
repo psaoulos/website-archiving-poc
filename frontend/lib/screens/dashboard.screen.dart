@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:frontend/models/crawler_status_response.model.dart';
 import 'package:frontend/screens/actions.screen.dart';
+import 'package:frontend/screens/logs.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/centered_outlined_button.widget.dart';
@@ -113,11 +114,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           padding: const EdgeInsets.only(bottom: 2.5),
                         ),
                         CenteredOutlinedButton(
-                          buttonLabel: "See some Results",
+                          buttonLabel: "See Crawler Results",
                           buttonWidth: 150,
                           buttonOnClick: () {
                             Navigator.of(context).pushReplacementNamed(
                               ResultsScreen.routeName,
+                            );
+                          },
+                        ),
+                        CenteredOutlinedButton(
+                          buttonLabel: "See Backend Logs",
+                          buttonWidth: 150,
+                          buttonOnClick: () {
+                            Navigator.of(context).pushReplacementNamed(
+                              LogsScreen.routeName,
                             );
                           },
                         ),

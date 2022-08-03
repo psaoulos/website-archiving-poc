@@ -2,6 +2,7 @@
 from datetime import datetime
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 import pytz
 
 
@@ -75,7 +76,8 @@ def init_logger():
     if not os.path.exists('./logs'):
         os.makedirs('./logs')
         logger.debug("Logs Folder did not exist, creating!")
-    file_handler = logging.FileHandler("./logs/crawler_backend.log", mode='a')
+    file_handler = RotatingFileHandler("./logs/crawler_backend.log", mode='a', maxBytes=5*1024*1024,
+                                       backupCount=2, encoding='utf-8', delay=0)
     file_handler.setLevel(fh_level)
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
@@ -84,6 +86,7 @@ def init_logger():
 def get_logger(logger_name="crawler_backend"):
     """ Getter function for application's core Logger. """
     return logging.getLogger(logger_name)
+
 
 def conditonal_logging(should_log, message, level="DEBUG", logger_name="crawler_backend"):
     """ Helper function used to conditionaly print logs to avoid spamming the log output. """

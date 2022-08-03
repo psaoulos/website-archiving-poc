@@ -7,7 +7,7 @@ class MainProvider with ChangeNotifier {
     this.darkMode = true,
   });
 
-  void toggleTheme() async{
+  void toggleTheme() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_dark_theme', !darkMode);
     darkMode = !darkMode;

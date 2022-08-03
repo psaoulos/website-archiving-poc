@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/providers/main.provider.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
+import 'package:frontend/screens/logs.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:frontend/widgets/main_drawer.widget.dart';
 import 'package:provider/provider.dart';
@@ -38,6 +39,9 @@ class _MainScaffoldState extends State<MainScaffold> {
           break;
         case Options.results:
           _routeToNavigate = ResultsScreen.routeName;
+          break;
+        case Options.backendLogs:
+          _routeToNavigate = LogsScreen.routeName;
           break;
         default:
           _routeToNavigate = DashboardScreen.routeName;

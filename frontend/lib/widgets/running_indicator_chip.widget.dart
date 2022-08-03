@@ -3,8 +3,14 @@ import 'package:flutter/material.dart';
 class RunningIndicatorChip extends StatelessWidget {
   bool isRunning;
   Function refreshFunction;
+  String activeText;
+  String stoppedText;
   RunningIndicatorChip(
-      {Key? key, required this.isRunning, required this.refreshFunction})
+      {Key? key,
+      required this.isRunning,
+      required this.refreshFunction,
+      this.activeText = 'Running',
+      this.stoppedText = 'Finished'})
       : super(key: key);
 
   @override
@@ -20,7 +26,7 @@ class RunningIndicatorChip extends StatelessWidget {
                 : Colors.green
             : Colors.grey,
       ),
-      label: Text(isRunning ? 'Running' : 'Finished'),
+      label: Text(isRunning ? activeText : stoppedText),
       deleteIcon: isDarkMode
           ? const Icon(Icons.refresh, color: Colors.black45)
           : const Icon(Icons.refresh, color: Colors.black45),

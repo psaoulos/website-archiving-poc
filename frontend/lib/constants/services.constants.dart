@@ -5,3 +5,4 @@ const String backendCrawlerStartEndpoint = "/crawler/start";
 const String backendCrawlerStopEndpoint = "/crawler/stop";
 const String backendResultsGetEarliestDateEndpoint = "/results/getearliestdate";
 const String backendResultsGetAllAddresses = "/results/getalladdresses";
+const String backendGetLogs = "/getlogs";

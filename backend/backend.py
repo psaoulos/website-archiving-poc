@@ -1,11 +1,14 @@
 """ Entry file for the application. """
 from __future__ import print_function, unicode_literals
 import subprocess
+import urllib.parse
+import json
 import os
 from datetime import date
-from flask import Flask, jsonify, current_app, request
+from flask import Flask, render_template, jsonify, current_app, request
+from flask_socketio import SocketIO, emit, disconnect
 from flask_cors import CORS, cross_origin
-from waitress import serve
+
 from modules import Variables, Database, FileSystem, Logger
 
 SUB_PROCESS = None
@@ -23,6 +26,41 @@ def main():
     app = Flask("crawler_backend")
     CORS(app)
     app.config['CORS_HEADERS'] = 'Content-Type'
+    app.config['SECRET_KEY'] = 'secret!'
+    # socketio = SocketIO(app, logger=True, engineio_logger=True, debug=True)  # All the loggers
+    socketio = SocketIO(app, cors_allowed_origins='*')
+
+    @socketio.on("connect", namespace="/getlogs")
+    def connected():
+        emitLogsUpdates()
+        try:
+            current_app.logger.info("New websocket client connected")
+        except Exception:
+            current_app.logger.info("New websocket client failed to connect")
+            disconnect()
+            return False
+
+    @socketio.on("disconnect", namespace="/getlogs")
+    def disconnected():
+        current_app.logger.info("Websocket client disconnected")
+
+    @socketio.on("frontend_request", namespace="/getlogs")
+    def logs_requested(message):
+        current_app.logger.info(
+            "Websocket logs requested, received json:"+str(message))
+        emit('backend_response',
+             {'logs': 'some data'})
+
+    @socketio.on_error(namespace="/getlogs")
+    def on_error(error):
+        current_app.logger.error(error)
+
+    def emitLogsUpdates():
+        with open('./templates/logs_content.html', 'r', encoding='utf-8') as logs_file:
+            data = json.dumps(urllib.parse.quote(logs_file.read()))
+            current_app.logger.info(
+                "emmiting"+data)
+            emit('logs_update', data)
 
     @app.route('/crawler/status', methods=['GET'])
     @cross_origin()
@@ -128,6 +166,21 @@ def main():
                         "No subprocess to kill.")
                     response = jsonify(success=True, stopped=False)
         except Exception as exc:
+            current_app.logger.error(exc, exc_info=True)
+            response = jsonify(success=False)
+        return response
+
+    @app.route('/getlogs', methods=['GET'])
+    @cross_origin()
+    def backend_get_logs():
+        response = None
+        try:
+            with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
+                return render_template('logs_content.html', text=logs_file.read())
+        except Exception as exc:
+            current_app.logger.error(exc)
+            response = jsonify(success=False)
+        return response
             current_app.logger.error(exc)
             response = jsonify(success=False)
         return response
