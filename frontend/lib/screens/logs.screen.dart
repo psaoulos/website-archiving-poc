@@ -61,57 +61,64 @@ class _LogsScreenState extends State<LogsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ThemeData mode = Theme.of(context);
-    final screenHeight = MediaQuery.of(context).size.height;
+    double deviceHeight = MediaQuery.of(context).size.height;
     double deviceWidth = MediaQuery.of(context).size.width;
-    bool _isDarkMode = mode.brightness == Brightness.dark;
 
     return MainScaffold(
       title: "Backend Logs",
-      childWidget: SizedBox(
-        width: double.infinity,
-        child: Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 15),
-                  child: SizedBox(
-                    width: deviceWidth * 0.8,
-                    child: Row(
+      childWidget: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SizedBox(
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
                       children: [
-                        const Text('Backend Logs'),
-                        const Spacer(),
-                        const Padding(
-                          padding: EdgeInsets.only(right: 5),
-                          child: Text('Socket status:'),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 15),
+                          child: SizedBox(
+                            width: deviceWidth * 0.8,
+                            child: Row(
+                              children: [
+                                const Text('Backend Logs'),
+                                const Spacer(),
+                                const Padding(
+                                  padding: EdgeInsets.only(right: 5),
+                                  child: Text('Socket status:'),
+                                ),
+                                RunningIndicatorChip(
+                                  isRunning: logsSocket.connected,
+                                  refreshFunction: () {
+                                    if (logsSocket.connected) {
+                                      logsSocket.close();
+                                    }
+                                    logsSocket.connect();
+                                  },
+                                  activeText: "Live",
+                                  stoppedText: "----",
+                                )
+                              ],
+                            ),
+                          ),
                         ),
-                        RunningIndicatorChip(
-                          isRunning: logsSocket.connected,
-                          refreshFunction: () {
-                            if (logsSocket.connected) {
-                              logsSocket.close();
-                            }
-                            logsSocket.connect();
-                          },
-                          activeText: "Live",
-                          stoppedText: "----",
-                        )
+                        if (logsResponse != "")
+                          HtmlWebView(
+                            data: logsResponse,
+                            width: deviceWidth * 0.8,
+                            height: deviceHeight * 0.8,
+                          )
                       ],
                     ),
                   ),
                 ),
-                if (logsResponse != "")
-                  HtmlWebView(
-                    data: logsResponse,
-                    width: deviceWidth * 0.8,
-                    height: screenHeight,
-                  )
-              ],
-            ),
+              ),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }

@@ -1,19 +1,27 @@
 <!DOCTYPE html>
 <html>
-   <head>
-      <title></title>
-      <style>
-         #root_template_div {
+
+<head>
+   <title></title>
+   <style>
+      #root_template_div {
          width: 100%;
          color: {{_text_color_}};
-         }
-      </style>
-   </head>
-   <body>
-      <div id="root_template_div">
-         <div>
-            <pre><code>{{_text_}}</code></pre>
-         </div>
+      }
+   </style>
+   <script>
+      function loadScrolledToBottome() {
+         window.scrollTo(0, document.body.scrollHeight);  // The function returns the product of p1 and p2
+      }
+   </script>
+</head>
+
+<body onload="loadScrolledToBottome()">
+   <div id="root_template_div">
+      <div>
+         <pre><code>{{_text_}}</code></pre>
       </div>
-   </body>
+   </div>
+</body>
+
 </html>
