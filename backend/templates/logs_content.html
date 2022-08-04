@@ -3,20 +3,17 @@
    <head>
       <title></title>
       <style>
-         #div1 {
-         width: 1000px;
-         overflow-y: scroll;
-         overflow-x: scroll;
+         #root_template_div {
+         width: 100%;
+         color: {{_text_color_}};
          }
       </style>
    </head>
    <body>
-      <div id="div1">
-         <pre>
-<code>
-{{ text }}
-</code>
-</pre>
+      <div id="root_template_div">
+         <div>
+            <pre><code>{{_text_}}</code></pre>
+         </div>
       </div>
    </body>
 </html>

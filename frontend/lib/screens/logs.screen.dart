@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'dart:html';
+import 'package:frontend/widgets/htmlWebView/html_web_view.dart';
+
 import 'package:flutter/material.dart';
 import 'package:frontend/constants/services.constants.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 import 'package:frontend/widgets/running_indicator_chip.widget.dart';
-import 'dart:ui' as ui;
 import 'package:socket_io_client/socket_io_client.dart' as socket_io;
 
 class LogsScreen extends StatefulWidget {
@@ -22,7 +22,7 @@ class _LogsScreenState extends State<LogsScreen> {
           .setTransports(['websocket']) // for Flutter or Dart VM
           .disableAutoConnect() // disable auto-connection
           .build());
-  String logs = "";
+  String logsResponse = "";
 
   @override
   void initState() {
@@ -31,7 +31,6 @@ class _LogsScreenState extends State<LogsScreen> {
       setState(() {});
     });
     logsSocket.onDisconnect((_) {
-      print("disconneted");
       Timer(const Duration(milliseconds: 200), () {
         if (mounted) {
           setState(() {});
@@ -39,12 +38,14 @@ class _LogsScreenState extends State<LogsScreen> {
       });
     });
     logsSocket.on('logs_update', (json) {
-      setState(() {});
+      final Map jsonMap = Map.from(json);
+      setState(() {
+        logsResponse = jsonMap['logs'];
+      });
     });
     logsSocket.on('backend_response', (json) {
-      print('Got response: ' + json['logs']);
       setState(() {
-        logs = json['logs'];
+        logsResponse = json['logs'];
       });
     });
 
@@ -65,15 +66,6 @@ class _LogsScreenState extends State<LogsScreen> {
     double deviceWidth = MediaQuery.of(context).size.width;
     bool _isDarkMode = mode.brightness == Brightness.dark;
 
-    // // ignore: undefined_prefixed_name
-    // ui.platformViewRegistry.registerViewFactory(
-    //     'hello-world-html',
-    //     (int viewId) => IFrameElement()
-    //       ..height = "600"
-    //       ..width = "600"
-    //       ..src = "data:text/html;charset=utf-8,${logsResponse?.logs}"
-    //       ..style.border = 'none');
-
     return MainScaffold(
       title: "Backend Logs",
       childWidget: SizedBox(
@@ -83,32 +75,39 @@ class _LogsScreenState extends State<LogsScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                Row(
-                  children: [
-                    const Text('Backend Logs'),
-                    const Spacer(),
-                    const Padding(
-                      padding: EdgeInsets.only(right: 5),
-                      child: Text('Socket status:'),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 15),
+                  child: SizedBox(
+                    width: deviceWidth * 0.8,
+                    child: Row(
+                      children: [
+                        const Text('Backend Logs'),
+                        const Spacer(),
+                        const Padding(
+                          padding: EdgeInsets.only(right: 5),
+                          child: Text('Socket status:'),
+                        ),
+                        RunningIndicatorChip(
+                          isRunning: logsSocket.connected,
+                          refreshFunction: () {
+                            if (logsSocket.connected) {
+                              logsSocket.close();
+                            }
+                            logsSocket.connect();
+                          },
+                          activeText: "Live",
+                          stoppedText: "----",
+                        )
+                      ],
                     ),
-                    RunningIndicatorChip(
-                      isRunning: logsSocket.connected,
-                      refreshFunction: () {
-                        if (logsSocket.connected) {
-                          logsSocket.close();
-                        }
-                        logsSocket.connect();
-                      },
-                      activeText: "Live",
-                      stoppedText: "Disconnected",
-                    )
-                  ],
+                  ),
                 ),
-                // if (logsResponse != null)
-                //   SizedBox(
-                //       height: 600,
-                //       width: 1000,
-                //       child: HtmlElementView(viewType: 'hello-world-html')),
+                if (logsResponse != "")
+                  HtmlWebView(
+                    data: logsResponse,
+                    width: deviceWidth * 0.8,
+                    height: screenHeight,
+                  )
               ],
             ),
           ),

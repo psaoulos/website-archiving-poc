@@ -2,7 +2,6 @@
 from __future__ import print_function, unicode_literals
 import subprocess
 import urllib.parse
-import json
 import os
 from datetime import date
 from flask import Flask, render_template, jsonify, current_app, request
@@ -32,34 +31,32 @@ def main():
 
     @socketio.on("connect", namespace="/getlogs")
     def connected():
-        emitLogsUpdates()
         try:
-            current_app.logger.info("New websocket client connected")
+            current_app.logger.debug("New websocket client connected")
         except Exception:
-            current_app.logger.info("New websocket client failed to connect")
+            current_app.logger.debug("New websocket client failed to connect")
             disconnect()
             return False
 
     @socketio.on("disconnect", namespace="/getlogs")
     def disconnected():
-        current_app.logger.info("Websocket client disconnected")
+        current_app.logger.debug("Websocket client disconnected")
 
     @socketio.on("frontend_request", namespace="/getlogs")
     def logs_requested(message):
-        current_app.logger.info(
-            "Websocket logs requested, received json:"+str(message))
-        emit('backend_response',
-             {'logs': 'some data'})
+        emitLogsUpdate()
 
     @socketio.on_error(namespace="/getlogs")
     def on_error(error):
         current_app.logger.error(error)
 
-    def emitLogsUpdates():
-        with open('./templates/logs_content.html', 'r', encoding='utf-8') as logs_file:
-            data = json.dumps(urllib.parse.quote(logs_file.read()))
+    def emitLogsUpdate():
             current_app.logger.info(
-                "emmiting"+data)
+            "Sending update now")
+        with open('./templates/logs_content.html', 'r', encoding='utf-8') as template_file:
+            with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
+                temp = template_file.read().replace("{{_text_}}", logs_file.read())
+                data = {'logs': urllib.parse.quote(temp)}
             emit('logs_update', data)
 
     @app.route('/crawler/status', methods=['GET'])
