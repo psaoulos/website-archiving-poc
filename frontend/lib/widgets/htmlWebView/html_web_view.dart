@@ -16,7 +16,7 @@ class HtmlWebView extends StatelessWidget {
         data: data,
         width: width,
         height: height,
-      ); 
+      );
     } else {
       return HtmlWebViewMobile(
         data: data,

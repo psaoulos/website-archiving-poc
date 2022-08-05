@@ -36,7 +36,7 @@ if [ -z "${WEBPAGE_URL}" ]; then
     ask_user=true
 else
     if [ "$DEVELOP_MODE" = false ]; then
-        echo "The site you wish to crawl over is the following: $WEBPAGE_URL"
+        echo "The default site you wish to crawl over is the following: $WEBPAGE_URL"
         select yn in "Yes" "No"; do
             case $yn in
             Yes)
@@ -57,7 +57,7 @@ fi
 # get user input for site address
 while $ask_user; do
     read -p "Enter site to crawl: " new_webpage
-    echo "The site you wish to crawl over is the following: $new_webpage"
+    echo "The default site you wish to crawl over is the following: $new_webpage"
     select yn in "Yes" "No"; do
         case $yn in
         Yes)

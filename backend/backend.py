@@ -12,6 +12,7 @@ from modules import Variables, Database, FileSystem, Logger
 
 SUB_PROCESS = None
 SUB_PROCESS_CRAWLER_ID = None
+SOCKET_CONNECTED_USERS = 0
 
 
 def main():
@@ -31,8 +32,10 @@ def main():
 
     @socketio.on("connect", namespace="/getlogs")
     def connected():
+        global SOCKET_CONNECTED_USERS
         try:
-            current_app.logger.debug("New websocket client connected")
+            SOCKET_CONNECTED_USERS += 1
+            current_app.logger.debug("New websocket client connected, total:"+str(SOCKET_CONNECTED_USERS))
         except Exception:
             current_app.logger.debug("New websocket client failed to connect")
             disconnect()
@@ -40,24 +43,40 @@ def main():
 
     @socketio.on("disconnect", namespace="/getlogs")
     def disconnected():
-        current_app.logger.debug("Websocket client disconnected")
+        global SOCKET_CONNECTED_USERS
+        if SOCKET_CONNECTED_USERS > 0:
+            SOCKET_CONNECTED_USERS -= 1
+        current_app.logger.debug("Websocket client disconnected, total:"+ str(SOCKET_CONNECTED_USERS))
 
     @socketio.on("frontend_request", namespace="/getlogs")
     def logs_requested(message):
-        emitLogsUpdate()
+        emit_logs()
 
     @socketio.on_error(namespace="/getlogs")
     def on_error(error):
         current_app.logger.error(error)
 
-    def emitLogsUpdate():
-            current_app.logger.info(
-            "Sending update now")
+    def emit_logs():
+        """ Used to send the first logs update after client connection. """
+        emit_logs_update()
+        if SOCKET_CONNECTED_USERS == 1:
+            emit_logs_recursively()
+
+    def emit_logs_recursively():
+        """ Used to send the logs updaterecursively. """
+        socketio.sleep(15)
+        if SOCKET_CONNECTED_USERS > 0:
+            emit_logs_update()
+            emit_logs_recursively()
+
+    def emit_logs_update():
+        """ Helper function for generating the logs html and emit it. """
         with open('./templates/logs_content.html', 'r', encoding='utf-8') as template_file:
             with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
                 temp = template_file.read().replace("{{_text_}}", logs_file.read())
                 data = {'logs': urllib.parse.quote(temp)}
-            emit('logs_update', data)
+                    current_app.logger.info('sending')
+                emit('logs_update', data)
 
     @app.route('/crawler/status', methods=['GET'])
     @cross_origin()
