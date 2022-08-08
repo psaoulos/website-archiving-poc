@@ -7,7 +7,7 @@ import 'package:frontend/models/crawler_stop_response.model.dart';
 import 'package:http/http.dart' as http;
 
 class CrawlerApiService {
-  Future<CrawlerStatusResponse> getCrawlerStatus() async {
+  static Future<CrawlerStatusResponse> getCrawlerStatus() async {
     final response = await http.get(
       Uri.parse(backendAddress + backendCrawlerStatusEndpoint),
     );
@@ -19,7 +19,7 @@ class CrawlerApiService {
     }
   }
 
-  Future<CrawlerStartResponse> startCrawler(
+  static Future<CrawlerStartResponse> startCrawler(
     String repeatTimes,
     String intervalSeconds,
     String diffThreshold,
@@ -51,7 +51,7 @@ class CrawlerApiService {
     }
   }
 
-  Future<CrawlerStopResponse> stopCrawler() async {
+  static Future<CrawlerStopResponse> stopCrawler() async {
     final response = await http.get(
       Uri.parse(backendAddress + backendCrawlerStopEndpoint),
     );

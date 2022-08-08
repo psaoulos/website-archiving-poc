@@ -34,7 +34,9 @@ class HtmlWebViewWeb extends StatelessWidget {
           ..width = width.toString()
           ..src = src
           ..style.backgroundColor = isDarkMode ? '#404040' : ''
-          ..style.border = 'none');
+          ..style.border = 'none'
+          ..style.height = '100%'
+          ..style.width = '100%');
     return SizedBox(
         height: height,
         width: width,

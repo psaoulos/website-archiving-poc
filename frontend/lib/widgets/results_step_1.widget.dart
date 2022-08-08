@@ -70,9 +70,24 @@ class _ResultsStep1State extends State<ResultsStep1> {
                               selectedPage = index;
                             });
                           },
-                          trailing: Text(
-                            '${allAddresses[index].archivesSum} archives',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          trailing: RichText(
+                            text: TextSpan(
+                              style: const TextStyle(
+                                fontSize: 12.0,
+                                color: Colors.grey,
+                              ),
+                              children: <TextSpan>[
+                                TextSpan(
+                                  text: allAddresses[index]
+                                      .archivesSum
+                                      .toString(),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const TextSpan(text: ' archives'),
+                              ],
+                            ),
                           ),
                         );
                       },

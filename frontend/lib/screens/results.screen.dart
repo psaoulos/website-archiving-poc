@@ -22,7 +22,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
   late DateTime startDate;
   late DateTime endDate;
   AllAddressesResponse? allAddresses;
-  String selectedAddress = '';
+  CrawlerAddress? selectedAddress;
   int _pageIndex = 0;
 
   String get _pageTitle {
@@ -87,7 +87,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
         duration: const Duration(milliseconds: 300), curve: Curves.linear);
   }
 
-  void selectAddress(String address) {
+  void selectAddress(CrawlerAddress address) {
     setState(() {
       selectedAddress = address;
     });

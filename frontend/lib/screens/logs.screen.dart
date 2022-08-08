@@ -95,11 +95,19 @@ class _LogsScreenState extends State<LogsScreen> {
                                   refreshFunction: () {
                                     if (logsSocket.connected) {
                                       logsSocket.close();
+                                    } else {
+                                      logsSocket.connect();
                                     }
-                                    logsSocket.connect();
                                   },
                                   activeText: "Live",
                                   stoppedText: "----",
+                                  deleteIcon: logsSocket.connected
+                                      ? const Icon(Icons.pause_circle_outline,
+                                          color: Colors.black45)
+                                      : const Icon(Icons.not_started_outlined,
+                                          color: Colors.black45),
+                                  deleteButtonTooltipMessage:
+                                      logsSocket.connected ? "Pause" : "Resume",
                                 )
                               ],
                             ),

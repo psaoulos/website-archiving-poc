@@ -5,13 +5,17 @@ class RunningIndicatorChip extends StatelessWidget {
   Function refreshFunction;
   String activeText;
   String stoppedText;
-  RunningIndicatorChip(
-      {Key? key,
-      required this.isRunning,
-      required this.refreshFunction,
-      this.activeText = 'Running',
-      this.stoppedText = 'Finished'})
-      : super(key: key);
+  Icon deleteIcon;
+  String deleteButtonTooltipMessage;
+  RunningIndicatorChip({
+    Key? key,
+    required this.isRunning,
+    required this.refreshFunction,
+    this.activeText = 'Running',
+    this.stoppedText = 'Finished',
+    this.deleteIcon = const Icon(Icons.refresh, color: Colors.black45),
+    this.deleteButtonTooltipMessage = 'Refresh status',
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -27,10 +31,8 @@ class RunningIndicatorChip extends StatelessWidget {
             : Colors.grey,
       ),
       label: Text(isRunning ? activeText : stoppedText),
-      deleteIcon: isDarkMode
-          ? const Icon(Icons.refresh, color: Colors.black45)
-          : const Icon(Icons.refresh, color: Colors.black45),
-      deleteButtonTooltipMessage: 'Refresh status',
+      deleteIcon: deleteIcon,
+      deleteButtonTooltipMessage: deleteButtonTooltipMessage,
       onDeleted: () {
         refreshFunction();
       },
