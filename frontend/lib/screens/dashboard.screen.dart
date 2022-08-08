@@ -24,7 +24,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Timer? _timer;
 
   void getCrawlerStatus() {
-    CrawlerApiService().getCrawlerStatus().then((response) {
+    CrawlerApiService.getCrawlerStatus().then((response) {
       setState(() {
         _running = response.running;
         _crawlerStatus = response;

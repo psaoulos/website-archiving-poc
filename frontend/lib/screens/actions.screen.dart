@@ -66,7 +66,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
   }
 
   void getCrawlerStatus() {
-    CrawlerApiService().getCrawlerStatus().then((response) {
+    CrawlerApiService.getCrawlerStatus().then((response) {
       setState(() {
         _running = response.running;
       });
@@ -156,15 +156,13 @@ class _ActionsScreenState extends State<ActionsScreen> {
         ),
       ],
     );
-    CrawlerApiService()
-        .startCrawler(
+    CrawlerApiService.startCrawler(
       _iterationsController.text,
       _intervalController.text,
       _ratioController.text,
       _urlController.text,
       forceStart,
-    )
-        .then(
+    ).then(
       (response) {
         if (response.success) {
           if (response.started) {
@@ -270,7 +268,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
         ),
       ],
     );
-    CrawlerApiService().stopCrawler().then(
+    CrawlerApiService.stopCrawler().then(
       (response) {
         if (response.success) {
           if (response.stopped) {

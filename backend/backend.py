@@ -75,8 +75,7 @@ def main():
             with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
                 temp = template_file.read().replace("{{_text_}}", logs_file.read())
                 data = {'logs': urllib.parse.quote(temp)}
-                    current_app.logger.info('sending')
-                emit('logs_update', data)
+                emit('logs_update', data, broadcast=True)
 
     @app.route('/crawler/status', methods=['GET'])
     @cross_origin()
@@ -186,13 +185,13 @@ def main():
             response = jsonify(success=False)
         return response
 
-    @app.route('/getlogs', methods=['GET'])
+    @app.route('/results/getalladdresses', methods=['GET'])
     @cross_origin()
-    def backend_get_logs():
+    def crawler_results_getalladdresses():
         response = None
         try:
-            with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
-                return render_template('logs_content.html', text=logs_file.read())
+            result = Database.get_addresses_and_archive_sum()
+            response = jsonify(success=True, addresses=result)
         except Exception as exc:
             current_app.logger.error(exc)
             response = jsonify(success=False)
@@ -201,7 +200,7 @@ def main():
             response = jsonify(success=False)
         return response
 
-    serve(app, host="0.0.0.0", port=3000)
+    socketio.run(app, host='0.0.0.0', port=3000)
 
 
 if __name__ == "__main__":

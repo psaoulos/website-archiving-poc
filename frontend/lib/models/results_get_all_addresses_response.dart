@@ -1,6 +1,8 @@
+import 'package:frontend/models/crawler_address.model.dart';
+
 class AllAddressesResponse {
   final bool success;
-  final List<String> addresses;
+  final List<CrawlerAddress> addresses;
 
   const AllAddressesResponse({
     required this.success,
@@ -9,7 +11,7 @@ class AllAddressesResponse {
 
   factory AllAddressesResponse.fromJson(Map<String, dynamic> json) {
     List addressesList = json['addresses'];
-    List<String> temp = [];
+    List<CrawlerAddress> temp = [];
 
     if (addressesList.isEmpty) {
       return AllAddressesResponse(
@@ -18,7 +20,7 @@ class AllAddressesResponse {
       );
     } else {
       for (var address in addressesList) {
-        temp.add(address[0]);
+        temp.add(CrawlerAddress(address: address[0], archivesSum: address[1]));
       }
       return AllAddressesResponse(
         success: json['success'],
@@ -29,6 +31,6 @@ class AllAddressesResponse {
 
   @override
   String toString() {
-    return "AllAddressesResponse - success: $success, addresses: ${addresses.toString()}";
+    return "AllAddressesResponse - success: $success, addresses length: ${addresses.length.toString()}";
   }
 }

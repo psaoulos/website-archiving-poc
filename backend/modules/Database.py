@@ -386,15 +386,16 @@ def delete_links_found(address):
     dbcon.close()
 
 
-def get_distinct_archive_addresses():
-    """ Helper function for getting distinct root_address from archive_index. """
+def get_addresses_and_archive_sum():
+    """ Helper function for getting root_addresses from archive_index and the sum of archives for each. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     result = ()
     try:
         query = ("""
-            SELECT DISTINCT root_address
+            SELECT root_address, COUNT( root_address ) AS 'sum_of_archives' 
             FROM archive_index
+            GROUP BY root_address
         """)
         dbcur.execute(query)
         result = dbcur.fetchall()
