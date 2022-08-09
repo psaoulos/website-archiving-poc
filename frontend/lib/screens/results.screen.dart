@@ -4,8 +4,8 @@ import 'package:frontend/models/results_get_all_addresses_response.dart';
 import 'package:frontend/services/results.services.dart';
 import 'package:frontend/widgets/results_step_1.widget.dart';
 import 'package:frontend/widgets/results_step_2.widget.dart';
-import 'package:intl/intl.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:frontend/widgets/results_step_3.widget.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 
@@ -22,7 +22,8 @@ class _ResultsScreenState extends State<ResultsScreen> {
   late DateTime startDate;
   late DateTime endDate;
   AllAddressesResponse? allAddresses;
-  CrawlerAddress? selectedAddress;
+  CrawlerAddress selectedAddress =
+      const CrawlerAddress(address: "", archivesSum: 0);
   int _pageIndex = 0;
 
   String get _pageTitle {
@@ -69,12 +70,26 @@ class _ResultsScreenState extends State<ResultsScreen> {
   void _onDateSelectionChanged(DateRangePickerSelectionChangedArgs args) {
     if (args.value is PickerDateRange &&
         args.value.startDate != null &&
+        args.value.endDate == null) {
+      setState(() {
+        startDate = args.value.startDate;
+        endDate = args.value.startDate;
+      });
+    } else if (args.value is PickerDateRange &&
+        args.value.startDate != null &&
         args.value.endDate != null) {
       setState(() {
         startDate = args.value.startDate;
         endDate = args.value.endDate;
       });
     }
+  }
+
+  void _selectSignleDate(DateTime date) {
+    setState(() {
+      startDate = date;
+      endDate = date;
+    });
   }
 
   void nextPage() {
@@ -85,6 +100,10 @@ class _ResultsScreenState extends State<ResultsScreen> {
   void previousPage() {
     buttonCarouselController.previousPage(
         duration: const Duration(milliseconds: 300), curve: Curves.linear);
+  }
+
+  void goToPage(int page) {
+    buttonCarouselController.jumpToPage(page);
   }
 
   void selectAddress(CrawlerAddress address) {
@@ -121,10 +140,17 @@ class _ResultsScreenState extends State<ResultsScreen> {
                 ResultsStep2(
                   width: deviceWidth * 0.95,
                   height: deviceHeight * 0.95,
+                  selectedAddress: selectedAddress,
                   onDateSelectionChanged: _onDateSelectionChanged,
+                  selectSignleDate: _selectSignleDate,
                   nextPage: nextPage,
                   previousPage: previousPage,
                 ),
+                ResultsStep3(
+                  width: deviceWidth,
+                  height: deviceHeight * 0.7,
+                  nextPage: nextPage,
+                )
               ],
               carouselController: buttonCarouselController,
               options: CarouselOptions(

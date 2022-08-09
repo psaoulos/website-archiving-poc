@@ -25,6 +25,26 @@ class ResultsStep1 extends StatefulWidget {
 
 class _ResultsStep1State extends State<ResultsStep1> {
   int selectedPage = -1;
+
+  void updateSelectedPage(int index, BuildContext context) {
+    if (widget.allAddresses[index].archivesSum > 1) {
+      setState(() {
+        selectedPage = index;
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cannot generate differences for page that only has one previous archive!',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final ThemeData mode = Theme.of(context);
@@ -48,49 +68,61 @@ class _ResultsStep1State extends State<ResultsStep1> {
                         PointerDeviceKind.mouse,
                       },
                     ),
-                    child: ListView.builder(
-                      scrollDirection: Axis.vertical,
-                      shrinkWrap: true,
-                      itemCount: allAddresses.length,
-                      itemBuilder: (context, index) {
-                        return ListTile(
-                          tileColor:
-                              index == selectedPage ? Colors.grey[200] : null,
-                          leading: OutlinedButton(
-                            onPressed: () {
-                              setState(() {
-                                selectedPage = index;
-                              });
-                            },
-                            child: const Text('Select'),
-                          ),
-                          title: Text(allAddresses[index].address),
-                          onTap: () {
-                            setState(() {
-                              selectedPage = index;
-                            });
-                          },
-                          trailing: RichText(
-                            text: TextSpan(
-                              style: const TextStyle(
-                                fontSize: 12.0,
-                                color: Colors.grey,
-                              ),
-                              children: <TextSpan>[
-                                TextSpan(
-                                  text: allAddresses[index]
-                                      .archivesSum
-                                      .toString(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
+                    child: Column(
+                      children: [
+                        Text('${allAddresses.length} addresses found'),
+                        ListView.builder(
+                          scrollDirection: Axis.vertical,
+                          shrinkWrap: true,
+                          itemCount: allAddresses.length,
+                          itemBuilder: (context, index) {
+                            return Column(
+                              children: [
+                                ListTile(
+                                  tileColor: isDarkMode
+                                      ? index == selectedPage
+                                          ? Colors.grey[800]
+                                          : null
+                                      : index == selectedPage
+                                          ? Colors.grey[200]
+                                          : null,
+                                  leading: OutlinedButton(
+                                    onPressed: () {
+                                      updateSelectedPage(index, context);
+                                    },
+                                    child: const Text('Select'),
+                                  ),
+                                  title: Text(allAddresses[index].address),
+                                  onTap: () {
+                                    updateSelectedPage(index, context);
+                                  },
+                                  trailing: RichText(
+                                    text: TextSpan(
+                                      style: const TextStyle(
+                                        fontSize: 12.0,
+                                        color: Colors.grey,
+                                      ),
+                                      children: <TextSpan>[
+                                        TextSpan(
+                                          text: allAddresses[index]
+                                              .archivesSum
+                                              .toString(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        const TextSpan(text: ' archives'),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                                const TextSpan(text: ' archives'),
+                                if (index != allAddresses.length - 1)
+                                  const Divider(),
                               ],
-                            ),
-                          ),
-                        );
-                      },
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ),
                 ),

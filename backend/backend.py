@@ -196,6 +196,66 @@ def main():
             current_app.logger.error(exc)
             response = jsonify(success=False)
         return response
+
+    @app.route('/results/getearliestarchive', methods=['POST'])
+    @cross_origin()
+    def crawler_results_getearliestarchive():
+        response = None
+        root_address = None
+        try:
+            if 'root_address' in request.json:
+                root_address = request.json.get('root_address')
+            if root_address is None:
+                response = jsonify(success=False)
+            else:
+                result = Database.get_first_archive_taken(root_address)
+                response = jsonify(success=True, archive=result)
+        except Exception as exc:
+            current_app.logger.error(exc, exc_info=True)
+            response = jsonify(success=False)
+        return response
+
+    @app.route('/results/getlatestarchive', methods=['POST'])
+    @cross_origin()
+    def crawler_results_getlatestarchive():
+        response = None
+        root_address = None
+        try:
+            if 'root_address' in request.json:
+                root_address = request.json.get('root_address')
+            if root_address is None:
+                response = jsonify(success=False)
+            else:
+                result = Database.get_last_archive_taken(root_address)
+                response = jsonify(success=True, archive=result)
+        except Exception as exc:
+            current_app.logger.error(exc, exc_info=True)
+            response = jsonify(success=False)
+        return response
+
+    @app.route('/results/getallarchive', methods=['POST'])
+    @cross_origin()
+    def crawler_results_getallarchive():
+        response = None
+        root_address = None
+        try:
+            if 'root_address' in request.json:
+                root_address = request.json.get('root_address')
+                result = Database.get_all_archives(root_address)
+                response = jsonify(success=True, archives=result)
+        except Exception as exc:
+            current_app.logger.error(exc, exc_info=True)
+            response = jsonify(success=False)
+        return response
+
+    @app.route('/results/generate', methods=['POST'])
+    @cross_origin()
+    def crawler_results():
+        response = None
+        try:
+            with open('./logs/temp.html', 'r', encoding='utf-8') as logs_file:
+                return render_template('archive_diffs.html', text=logs_file.read())
+        except Exception as exc:
             current_app.logger.error(exc)
             response = jsonify(success=False)
         return response

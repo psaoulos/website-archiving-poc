@@ -414,7 +414,7 @@ def get_first_archive_taken(address):
     result = ()
     try:
         query = (f"""
-            SELECT creation_timestamp
+            SELECT id, crawler_id, root_address, file_location, creation_timestamp
             FROM archive_index ai
             WHERE root_address = '{address}'
             ORDER BY creation_timestamp ASC LIMIT 1
@@ -422,30 +422,49 @@ def get_first_archive_taken(address):
         dbcur.execute(query)
         result = dbcur.fetchone()
     except Exception as ex:
-        logger.error(f"Error getting archive in date range, transaction: {ex}")
+        logger.error(f"Error getting first archive taken, transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result
+
+def get_last_archive_taken(address):
+    """ Helper function for getting the last archive taken for an address. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT id, crawler_id, root_address, file_location, creation_timestamp
+            FROM archive_index ai
+            WHERE root_address = '{address}'
+            ORDER BY creation_timestamp DESC LIMIT 1
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchone()
+    except Exception as ex:
+        logger.error(f"Error getting last archive taken, transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
     return result
 
 
-def get_archives_in_date_range(address, start_date, end_date):
-    """ Helper function for getting all archives taken inside date range given. """
+def get_all_archives(address):
+    """ Helper function for getting all archives taken. """
     dbcon = connect_to_db()
     dbcur = dbcon.cursor()
     result = ()
     try:
         query = (f"""
-            SELECT *
+            SELECT id, crawler_id, root_address, file_location, creation_timestamp
             FROM archive_index
-            WHERE creation_timestamp >= '{start_date}'
-            AND creation_timestamp <  '{end_date}'
-            AND address = '{address}'
+            WHERE root_address = '{address}'
         """)
         dbcur.execute(query)
         result = dbcur.fetchall()
     except Exception as ex:
-        logger.error(f"Error getting archive in date range, transaction: {ex}")
+        logger.error(f"Error getting all archive dates, transaction: {ex}")
         dbcon.rollback()
     dbcur.close()
     dbcon.close()
