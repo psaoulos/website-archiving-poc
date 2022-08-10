@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/providers/main.provider.dart';
+import 'package:frontend/providers/results.provider.dart';
 import 'package:frontend/screens/actions.screen.dart';
 import 'package:frontend/screens/dashboard.screen.dart';
 import 'package:frontend/screens/logs.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:provider/provider.dart';
-import 'package:frontend/providers/main.provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
@@ -16,6 +17,9 @@ void main() async {
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(
       create: (_) => MainProvider(darkMode: isDarkTheme),
+    ),
+    ChangeNotifierProvider(
+      create: (_) => ResultsProvider(),
     ),
   ], child: const MyApp()));
 }

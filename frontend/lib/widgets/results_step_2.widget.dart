@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/models/archive_info.model.dart';
 import 'package:frontend/models/crawler_address.model.dart';
+import 'package:frontend/providers/results.provider.dart';
 import 'package:frontend/services/results.services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
 import 'package:syncfusion_flutter_core/theme.dart';
+import 'package:frontend/extenstions/datetime.extenstion.dart';
 
 class ResultsStep2 extends StatefulWidget {
-  double width;
-  double height;
-  CrawlerAddress selectedAddress;
-  final Function onDateSelectionChanged;
-  final Function selectSignleDate;
-  Function nextPage;
-  Function previousPage;
+  int pageIndex;
+  final Function nextPage;
+  final Function previousPage;
   ResultsStep2({
     Key? key,
-    required this.width,
-    required this.height,
-    required this.selectedAddress,
-    required this.onDateSelectionChanged,
-    required this.selectSignleDate,
+    required this.pageIndex,
     required this.nextPage,
     required this.previousPage,
   }) : super(key: key);
@@ -30,83 +25,117 @@ class ResultsStep2 extends StatefulWidget {
 }
 
 class _ResultsStep2State extends State<ResultsStep2> {
-  DateTime earliestDate = DateTime(2020, 1, 1);
-  DateTime latestDate = DateTime(2020, 2, 1);
-  List<ArchiveInfo> allTheArchives = [];
   DateRangePickerSelectionChangedArgs? selectedArgs;
 
-  @override
-  void didUpdateWidget(covariant ResultsStep2 oldWidget) {
-    if (oldWidget.selectedAddress.address != widget.selectedAddress.address) {
-      ResultsApiService.getEarliestDate(widget.selectedAddress.address)
-          .then((getEarliestDate) {
-        setState(() {
-          earliestDate = getEarliestDate.creationTimestamp;
-        });
-      });
-      ResultsApiService.getLatestDate(widget.selectedAddress.address)
-          .then((getLatestDate) {
-        setState(() {
-          latestDate = getLatestDate.creationTimestamp;
-        });
-      });
-      ResultsApiService.getAllDates(widget.selectedAddress.address)
-          .then((value) {
-        setState(() {
-          allTheArchives = value;
-        });
-      });
+  bool get _moreThanOneDay {
+    final resultsProvider =
+        Provider.of<ResultsProvider>(context, listen: false);
+    if (resultsProvider.latestArchiveDate
+            .difference(resultsProvider.earliestArchiveDate)
+            .inDays >
+        1) {
+      return true;
+    } else {
+      return false;
     }
-    super.didUpdateWidget(oldWidget);
+  }
+
+  bool get _selectionValid {
+    final resultsProvider =
+        Provider.of<ResultsProvider>(context, listen: false);
+    if (!_moreThanOneDay) {
+      return true;
+    }
+    DateTime? selectedStart = selectedArgs?.value.startDate;
+    DateTime? selectedEnd = selectedArgs?.value.endDate;
+    if (selectedArgs == null) {
+      return false;
+    } else if (selectedStart == null) {
+      return false;
+    }
+    if (selectedEnd != null) {
+      if (!selectedStart.isSameDate(selectedEnd)) {
+        return true;
+      }
+    }
+    int counter = 0;
+    for (var archive in resultsProvider.allTheArchives) {
+      if (selectedStart.isSameDate(archive.creationTimestamp)) {
+        counter += 1;
+      }
+    }
+    if (counter > 1) {
+      return true;
+    }
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
+    final resultsProvider = Provider.of<ResultsProvider>(context, listen: true);
+    double height = MediaQuery.of(context).size.height;
+    double width = MediaQuery.of(context).size.width;
     final ThemeData mode = Theme.of(context);
     bool isDarkMode = mode.brightness == Brightness.dark;
-    bool moreThanOneDay = false;
-    if (latestDate.difference(earliestDate).inDays > 1) {
-      moreThanOneDay = true;
-    }
 
     Widget _renderDatePicker() {
       return SizedBox(
-        width: widget.width * 0.9,
-        child: SfTheme(
-          data: SfThemeData(
-            dateRangePickerThemeData: isDarkMode
-                ? SfDateRangePickerThemeData(
-                    selectionColor: Colors.blue,
-                    rangeSelectionColor: Colors.blue[300],
-                    endRangeSelectionColor: Colors.blue,
-                    startRangeSelectionColor: Colors.blue,
-                    todayHighlightColor: Colors.blue,
-                    weekNumberBackgroundColor: Colors.blue,
-                    todayTextStyle: const TextStyle(
-                      color: Colors.blue,
-                    ),
-                  )
-                : null,
-          ),
-          child: SfDateRangePicker(
-            selectableDayPredicate: (DateTime val) =>
-                val.weekday == 5 || val.weekday == 6 ? false : true,
-            view: DateRangePickerView.month,
-            showTodayButton: true,
-            minDate: earliestDate,
-            maxDate: latestDate,
-            headerHeight: 20,
-            selectionMode: DateRangePickerSelectionMode.range,
-            onSelectionChanged: (DateRangePickerSelectionChangedArgs args) {
-              setState(() {
-                selectedArgs = args;
-              });
-              widget.onDateSelectionChanged(args);
-            },
-            monthViewSettings: const DateRangePickerMonthViewSettings(
-              firstDayOfWeek: 1,
-            ),
-          ),
+        width: width * 0.85,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (widget.pageIndex == 1)
+              SfTheme(
+                data: SfThemeData(
+                  dateRangePickerThemeData: isDarkMode
+                      ? SfDateRangePickerThemeData(
+                          selectionColor: Colors.blue,
+                          rangeSelectionColor: Colors.blue[300],
+                          endRangeSelectionColor: Colors.blue,
+                          startRangeSelectionColor: Colors.blue,
+                          todayHighlightColor: Colors.blue,
+                          weekNumberBackgroundColor: Colors.blue,
+                          disabledDatesTextStyle: TextStyle(
+                            color: Colors.grey[800],
+                          ),
+                          todayTextStyle: const TextStyle(
+                            color: Colors.blue,
+                          ),
+                        )
+                      : SfDateRangePickerThemeData(
+                          disabledDatesTextStyle: TextStyle(
+                            color: Colors.grey[300],
+                          ),
+                        ),
+                ),
+                child: SfDateRangePicker(
+                  selectableDayPredicate: (DateTime val) {
+                    DateTime tempDate = DateTime(val.year, val.month, val.day);
+                    if (resultsProvider.distinctArchiveDates
+                        .contains(tempDate)) {
+                      return true;
+                    }
+                    return false;
+                  },
+                  view: DateRangePickerView.month,
+                  showTodayButton: true,
+                  minDate: resultsProvider.earliestArchiveDate,
+                  maxDate: resultsProvider.latestArchiveDate,
+                  headerHeight: 20,
+                  selectionMode: DateRangePickerSelectionMode.range,
+                  onSelectionChanged:
+                      (DateRangePickerSelectionChangedArgs args) {
+                    setState(() {
+                      selectedArgs = args;
+                    });
+                    resultsProvider.selectDateRange(args);
+                  },
+                  monthViewSettings: const DateRangePickerMonthViewSettings(
+                    firstDayOfWeek: 1,
+                  ),
+                ),
+              ),
+          ],
         ),
       );
     }
@@ -116,17 +145,21 @@ class _ResultsStep2State extends State<ResultsStep2> {
         padding: const EdgeInsets.only(bottom: 10),
         child: RichText(
           text: TextSpan(
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+            ),
             children: <TextSpan>[
               const TextSpan(text: 'All archives for '),
               TextSpan(
-                text: widget.selectedAddress.address,
+                text: resultsProvider.selectedAddress.address,
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const TextSpan(text: ' are taken on '),
               TextSpan(
-                text: DateFormat('dd-MM-yyyy').format(latestDate),
+                text: DateFormat('dd-MM-yyyy')
+                    .format(resultsProvider.latestArchiveDate),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                 ),
@@ -140,22 +173,23 @@ class _ResultsStep2State extends State<ResultsStep2> {
 
     return Card(
       child: SizedBox(
-        width: widget.width,
-        height: widget.height,
+        height: height * 0.72,
+        width: width * 0.95,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    moreThanOneDay
-                        ? _renderDatePicker()
-                        : _renderOnlyOneDayInfo()
-                  ],
-                ),
+                if (resultsProvider.distinctArchiveDates.isNotEmpty)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _moreThanOneDay
+                          ? _renderDatePicker()
+                          : _renderOnlyOneDayInfo()
+                    ],
+                  ),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -164,17 +198,17 @@ class _ResultsStep2State extends State<ResultsStep2> {
                       child: const Text('Back'),
                     ),
                     Padding(
-                      padding: const EdgeInsets.only(left: 10),
+                      padding: const EdgeInsets.only(left: 5),
                       child: ElevatedButton(
-                        onPressed: selectedArgs != null &&
-                                selectedArgs?.value.startDate != null
-                            ? () => {widget.nextPage()}
-                            : moreThanOneDay
-                                ? null
-                                : () {
-                                    widget.selectSignleDate(latestDate);
-                                    widget.nextPage();
-                                  },
+                        onPressed: _selectionValid
+                            ? () {
+                                if (!_moreThanOneDay) {
+                                  resultsProvider.selectSignleDate(
+                                      resultsProvider.latestArchiveDate);
+                                }
+                                widget.nextPage();
+                              }
+                            : null,
                         child: const Text('Next'),
                       ),
                     ),
