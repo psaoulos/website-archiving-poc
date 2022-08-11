@@ -1,1 +1,22 @@
-{{ text }}
+<!doctype html>
+<html>
+
+<head>
+   <title></title>
+   <style>
+      #ratioDiv {
+         margin-left: auto;
+         margin-right: auto;
+         text-align: center;
+      }
+   </style>
+</head>
+
+<body>
+   <div id="ratioDiv">
+      <h2>Difference ratio: ≈ {{ ratio }}%</h2>
+   </div>
+   <div>{{ generated|safe }}</div>
+</body>
+
+</html>

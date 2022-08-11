@@ -469,3 +469,23 @@ def get_all_archives(address):
     dbcur.close()
     dbcon.close()
     return result
+
+def get_archives_location_from_id(id_a, id_b):
+    """ Helper function for getting the arcives' location from the given ids. """
+    dbcon = connect_to_db()
+    dbcur = dbcon.cursor()
+    result = ()
+    try:
+        query = (f"""
+            SELECT file_location
+            FROM archive_index ai 
+            WHERE id = {id_a} OR id = {id_b}
+        """)
+        dbcur.execute(query)
+        result = dbcur.fetchall()
+    except Exception as ex:
+        logger.error(f"Error getting all archive locations, transaction: {ex}")
+        dbcon.rollback()
+    dbcur.close()
+    dbcon.close()
+    return result

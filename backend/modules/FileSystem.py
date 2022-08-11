@@ -94,7 +94,7 @@ def calculate_file_difference(file_a_location, file_b_location, encoding_a="UTF-
 
 
 def calculate_content_difference(file_a_location, content_b, encoding_a="UTF-8", encoding_b="UTF-8"):
-    """ Calculates the difference percentage between the first fileand the second crawled content."""
+    """ Calculates the difference percentage between the first file and the second crawled content."""
     try:
         with open("./archive/temp.html", "w", encoding=encoding_b) as file:
             file.write(content_b)

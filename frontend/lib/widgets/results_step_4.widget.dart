@@ -1,5 +1,6 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:frontend/constants/services.constants.dart';
 import 'package:frontend/providers/results.provider.dart';
 import 'package:frontend/widgets/htmlWebView/html_web_view.dart';
 import 'package:intl/intl.dart';
@@ -86,7 +87,17 @@ class _ResultsStep4State extends State<ResultsStep4> {
                           ),
                         ),
                         HtmlWebView(
-                          data: 'https://www.google.gr',
+                          type: HtmlWebViewTypes.url,
+                          data: backendAddress +
+                              backendResultsGetHTMLDifferences
+                                  .replaceFirst(
+                                      '<first_archive_id>',
+                                      resultsProvider.firstArchiveSelected?.id
+                                          .toString() as String)
+                                  .replaceFirst(
+                                      '<second_archive_id>',
+                                      resultsProvider.secondArchiveSelected?.id
+                                          .toString() as String),
                           width: width * 0.92,
                           height: height * 0.68,
                         )

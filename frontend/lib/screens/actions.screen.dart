@@ -26,7 +26,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
   IntervalOptions _dropdownValue = IntervalOptions.seconds;
 
   final TextEditingController _urlController = TextEditingController(
-    text: 'https://www.in.gr',
+    text: 'https://www.macrumors.com/',
   );
   final TextEditingController _iterationsController = TextEditingController(
     text: '10',
@@ -342,7 +342,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
                               style: TextStyle(fontSize: 14),
                             ),
                             Text(
-                              'example: https://www.in.gr',
+                              'example: https://www.macrumors.com',
                               style:
                                   TextStyle(fontSize: 12, color: Colors.grey),
                             ),

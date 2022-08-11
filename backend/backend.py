@@ -1,5 +1,6 @@
 """ Entry file for the application. """
 from __future__ import print_function, unicode_literals
+import difflib
 import subprocess
 import urllib.parse
 import os
@@ -35,7 +36,8 @@ def main():
         global SOCKET_CONNECTED_USERS
         try:
             SOCKET_CONNECTED_USERS += 1
-            current_app.logger.debug("New websocket client connected, total:"+str(SOCKET_CONNECTED_USERS))
+            current_app.logger.debug(
+                "New websocket client connected, total:"+str(SOCKET_CONNECTED_USERS))
         except Exception:
             current_app.logger.debug("New websocket client failed to connect")
             disconnect()
@@ -46,7 +48,8 @@ def main():
         global SOCKET_CONNECTED_USERS
         if SOCKET_CONNECTED_USERS > 0:
             SOCKET_CONNECTED_USERS -= 1
-        current_app.logger.debug("Websocket client disconnected, total:"+ str(SOCKET_CONNECTED_USERS))
+        current_app.logger.debug(
+            "Websocket client disconnected, total:" + str(SOCKET_CONNECTED_USERS))
 
     @socketio.on("frontend_request", namespace="/getlogs")
     def logs_requested(message):
@@ -73,7 +76,8 @@ def main():
         """ Helper function for generating the logs html and emit it. """
         with open('./templates/logs_content.html', 'r', encoding='utf-8') as template_file:
             with open('./logs/crawler_backend.log', 'r', encoding='utf-8') as logs_file:
-                temp = template_file.read().replace("{{_text_}}", logs_file.read())
+                temp = template_file.read().replace(
+                    "{{_logs_}}", logs_file.read())
                 data = {'logs': urllib.parse.quote(temp)}
                 emit('logs_update', data, broadcast=True)
 
@@ -248,7 +252,39 @@ def main():
             response = jsonify(success=False)
         return response
 
-    @app.route('/results/generate', methods=['POST'])
+    @app.route('/results/generatehtml/<first_archive_id>/<second_archive_id>', methods=['GET'])
+    @cross_origin()
+    def crawler_results_html(first_archive_id=None, second_archive_id=None):
+        response = None
+        if first_archive_id is None or second_archive_id is None:
+            response = jsonify(success=False)
+        else:
+            try:
+                locations = Database.get_archives_location_from_id(first_archive_id, second_archive_id)
+                if len(locations) == 2:
+                    with open(locations[0][0], 'r', encoding='utf-8') as file_a:
+                        with open(locations[1][0], 'r', encoding='utf-8') as file_b:
+                            diff = difflib.HtmlDiff(wrapcolumn=60)
+                            diff._styles = diff._styles + """
+                                    table.diff {
+                                        font-family:Courier;
+                                        border:medium;
+                                        margin-left: auto;
+                                        margin-right: auto;
+                                    }
+                                    """
+                            result = diff.make_file(file_a, file_b, context=True)
+                            float_ratio = FileSystem.calculate_file_difference(locations[0][0], locations[1][0])
+                            percentage = (1 - round(float_ratio, 6)) * 100
+                            return render_template('archive_diffs.html', generated=result, ratio=percentage)
+                else:
+                    current_app.logger.error(f"Databse returned {len(locations)} locations, need exactly 2 to run.")
+                    response = jsonify(success=False)
+            except Exception as exc:
+                current_app.logger.error(exc)
+                response = jsonify(success=False)
+        return response
+
     @cross_origin()
     def crawler_results():
         response = None

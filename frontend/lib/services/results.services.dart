@@ -106,28 +106,4 @@ class ResultsApiService {
       throw Exception('Failed to get all archive dates');
     }
   }
-
-  static Future<ArchiveInfo> getGeneratedFile(
-    String rootAddress,
-  ) async {
-    final queryParameters = {
-      'root_address': rootAddress,
-    };
-    final jsonString = json.encode(queryParameters);
-    Map<String, String> headers = {
-      'Content-type': 'application/json',
-      'Accept': 'application/json',
-    };
-    final response = await http.post(
-      Uri.parse(backendAddress + backendResultsGetEarliestArchiveEndpoint),
-      headers: headers,
-      body: jsonString,
-    );
-
-    if (response.statusCode == 200) {
-      return ArchiveInfo.fromJson(jsonDecode(response.body));
-    } else {
-      throw Exception('Failed to get earliest archive date');
-    }
-  }
 }

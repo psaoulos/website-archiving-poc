@@ -115,6 +115,7 @@ class _LogsScreenState extends State<LogsScreen> {
                         ),
                         if (logsResponse != "")
                           HtmlWebView(
+                            type: HtmlWebViewTypes.data,
                             data: logsResponse,
                             width: deviceWidth * 0.8,
                             height: deviceHeight * 0.8,
