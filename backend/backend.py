@@ -1,10 +1,10 @@
-""" Entry file for the application. """
+""" Entry file for the backend. """
 from __future__ import print_function, unicode_literals
+import pdfkit
 import difflib
 import subprocess
 import urllib.parse
 import os
-from datetime import date
 from flask import Flask, render_template, jsonify, current_app, request
 from flask_socketio import SocketIO, emit, disconnect
 from flask_cors import CORS, cross_origin
@@ -30,6 +30,17 @@ def main():
     app.config['SECRET_KEY'] = 'secret!'
     # socketio = SocketIO(app, logger=True, engineio_logger=True, debug=True)  # All the loggers
     socketio = SocketIO(app, cors_allowed_origins='*')
+
+    @app.route('/status', methods=['GET'])
+    @cross_origin()
+    def backend_status():
+        response = None
+        try:
+            response = jsonify(success=True)
+        except Exception as exc:
+            current_app.logger.error(exc, exc_info=True)
+            response = jsonify(success=False)
+        return response
 
     @socketio.on("connect", namespace="/getlogs")
     def connected():
@@ -260,7 +271,8 @@ def main():
             response = jsonify(success=False)
         else:
             try:
-                locations = Database.get_archives_location_from_id(first_archive_id, second_archive_id)
+                locations = Database.get_archives_location_from_id(
+                    first_archive_id, second_archive_id)
                 if len(locations) == 2:
                     with open(locations[0][0], 'r', encoding='utf-8') as file_a:
                         with open(locations[1][0], 'r', encoding='utf-8') as file_b:
@@ -273,24 +285,54 @@ def main():
                                         margin-right: auto;
                                     }
                                     """
-                            result = diff.make_file(file_a, file_b, context=True)
-                            float_ratio = FileSystem.calculate_file_difference(locations[0][0], locations[1][0])
+                            result = diff.make_file(
+                                file_a, file_b, context=True)
+                            float_ratio = FileSystem.calculate_file_difference(
+                                locations[0][0], locations[1][0])
                             percentage = (1 - round(float_ratio, 6)) * 100
                             return render_template('archive_diffs.html', generated=result, ratio=percentage)
                 else:
-                    current_app.logger.error(f"Databse returned {len(locations)} locations, need exactly 2 to run.")
+                    current_app.logger.error(
+                        f"Databse returned {len(locations)} locations, need exactly 2 to run.")
                     response = jsonify(success=False)
             except Exception as exc:
                 current_app.logger.error(exc)
                 response = jsonify(success=False)
         return response
 
+    @app.route('/results/generatepdf', methods=['GET'])
     @cross_origin()
-    def crawler_results():
+    def crawler_results_pdf():
         response = None
         try:
-            with open('./logs/temp.html', 'r', encoding='utf-8') as logs_file:
-                return render_template('archive_diffs.html', text=logs_file.read())
+            first_archive_id = 1
+            second_archive_id = 2
+            locations = Database.get_archives_location_from_id(
+                first_archive_id, second_archive_id)
+            if len(locations) == 2:
+                with open(locations[0][0], 'r', encoding='utf-8') as file_a:
+                    with open(locations[1][0], 'r', encoding='utf-8') as file_b:
+                        diff = difflib.HtmlDiff(wrapcolumn=60)
+                        diff._styles = diff._styles + """
+                                table.diff {
+                                    font-family:Courier;
+                                    border:medium;
+                                    margin-left: auto;
+                                    margin-right: auto;
+                                }
+                                """
+                        result = diff.make_file(file_a, file_b, context=True)
+                        float_ratio = FileSystem.calculate_file_difference(
+                            locations[0][0], locations[1][0])
+                        percentage = (1 - round(float_ratio, 6)) * 100
+                        pdfkit.from_string(render_template(
+                            'archive_diffs.html', generated=result, ratio=percentage), 'test.pdf')
+                        response = jsonify(success=True)
+            else:
+                current_app.logger.error(
+                    f"Databse returned {len(locations)} locations, need exactly 2 to run.")
+                response = jsonify(success=False)
+            response = jsonify(success=True)
         except Exception as exc:
             current_app.logger.error(exc)
             response = jsonify(success=False)

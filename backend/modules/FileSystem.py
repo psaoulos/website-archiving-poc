@@ -85,7 +85,6 @@ def calculate_file_difference(file_a_location, file_b_location, encoding_a="UTF-
                 seq_mat.set_seqs(file_a.readlines(),
                                  file_b.readlines())
                 percentage = seq_mat.ratio()
-                logger.debug(f"Got the archive difference at {percentage}")
                 return percentage
     except Exception as ex:
         logger.error(
@@ -105,7 +104,6 @@ def calculate_content_difference(file_a_location, content_b, encoding_a="UTF-8",
                 seq_mat.set_seqs(file_a.readlines(),
                                  file_b.readlines())
                 percentage = seq_mat.ratio()
-                logger.debug(f"Got the archive difference at {percentage}")
                 return percentage
     except Exception as ex:
         logger.error(
