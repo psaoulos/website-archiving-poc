@@ -7,12 +7,15 @@ import 'package:frontend/screens/logs.screen.dart';
 import 'package:frontend/screens/results.screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 void main() async {
   WidgetsFlutterBinding
       .ensureInitialized(); // this line is needed to use async/await in main()
   final prefs = await SharedPreferences.getInstance();
   final isDarkTheme = prefs.getBool("is_dark_theme") ?? false;
+
+  await dotenv.load(fileName: ".env");
 
   runApp(MultiProvider(providers: [
     ChangeNotifierProvider(

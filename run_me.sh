@@ -3,11 +3,12 @@ export USER_ID=$(id -u)
 export GROUP_ID=$(id -g)
 
 # check if .env file exists
-FILE=.env
-env_exists=false
-if test -f "$FILE"; then
-    echo "Found env file."
-    env_exists=true
+ROOT_ENV_FILE=.env
+FRONTEND_ENV_FILE=./frontend/.env
+root_env_exists=false
+if test -f "$ROOT_ENV_FILE"; then
+    echo "Found env ROOT_ENV_FILE."
+    root_env_exists=true
     source .env
 fi
 
@@ -61,16 +62,16 @@ while $ask_user; do
     select yn in "Yes" "No"; do
         case $yn in
         Yes)
-            if $env_exists; then
+            if $root_env_exists; then
                 if !([ -z "${WEBPAGE_URL}" ]); then
                     # using sed Unix utility to parse and transform .env text
-                    sed -i '' -e "s*$WEBPAGE_URL*$new_webpage*g" $FILE
+                    sed -i '' -e "s*$WEBPAGE_URL*$new_webpage*g" $ROOT_ENV_FILE
                 else
-                    printf 'WEBPAGE_URL="'$new_webpage'"\n' >>$FILE
+                    printf 'WEBPAGE_URL="'$new_webpage'"\n' >>$ROOT_ENV_FILE
                 fi
             else
                 # since .env does not exist create it
-                printf 'WEBPAGE_URL="'$new_webpage'"\n' >>$FILE
+                printf 'WEBPAGE_URL="'$new_webpage'"\n' >>$ROOT_ENV_FILE
                 source .env
             fi
             ask_user=false
@@ -82,6 +83,14 @@ while $ask_user; do
         esac
     done
 done
+
+# Copy WEBPAGE_URL env variable to FRONTEND_ENV_FILE
+if test -f "$FRONTEND_ENV_FILE"; then
+    if grep -q "WEBPAGE_URL" $FRONTEND_ENV_FILE; then
+        sed -i '' -e '/WEBPAGE_URL=/d' $FRONTEND_ENV_FILE
+    fi
+fi
+printf 'WEBPAGE_URL="'$WEBPAGE_URL'"\n' >>$FRONTEND_ENV_FILE
 
 # make database's container folder if not exists
 mkdir -p database

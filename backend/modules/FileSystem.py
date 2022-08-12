@@ -4,7 +4,7 @@ import logging
 import os
 import difflib
 from datetime import datetime
-from zoneinfo import ZoneInfo
+import pytz
 from modules import Logger, Variables, Database
 
 
@@ -48,8 +48,8 @@ def create_page_folder(url):
 
 def make_day_folder():
     """ Creates a date specific folder to contain archived snapshots of page. """
-    sub_dir_name = datetime.now(
-        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime('%d-%m-%y')
+    sub_dir_name = datetime.now(pytz.timezone(
+        env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M:%S")
     try:
         os.mkdir(sub_dir_name)
     except FileExistsError:
@@ -61,8 +61,8 @@ def make_day_folder():
 def save_page(content, url, encoding, dif_ratio, crawler_id):
     """ Saves page content as a file on corresponding archive folder. """
     os.chdir(f"./archive/{get_os_friendly_name(url)}")
-    name = datetime.now(
-        ZoneInfo(env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M:%S")
+    name = datetime.now(pytz.timezone(
+        env_variables.get_env_var("TIME_ZONE"))).strftime("%H:%M:%S")
     folder_name = make_day_folder()
     file_location = f"./archive/{get_os_friendly_name(url)}/{folder_name}/{name}.html"
     logger.debug(

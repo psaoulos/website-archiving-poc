@@ -4,6 +4,7 @@ import 'package:frontend/services/crawler.services.dart';
 import 'package:frontend/widgets/main_scaffold.widget.dart';
 import 'package:frontend/widgets/running_indicator_chip.widget.dart';
 import 'package:frontend/widgets/time_scale_dropdown.widget.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum CrawlerActions {
   start,
@@ -26,7 +27,7 @@ class _ActionsScreenState extends State<ActionsScreen> {
   IntervalOptions _dropdownValue = IntervalOptions.seconds;
 
   final TextEditingController _urlController = TextEditingController(
-    text: 'https://www.macrumors.com/',
+    text: dotenv.get('WEBPAGE_URL', fallback: 'https://www.macrumors.com'),
   );
   final TextEditingController _iterationsController = TextEditingController(
     text: '10',
@@ -336,15 +337,15 @@ class _ActionsScreenState extends State<ActionsScreen> {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
+                          children: [
+                            const Text(
                               'Select the website to crawl over.',
                               style: TextStyle(fontSize: 14),
                             ),
                             Text(
-                              'example: https://www.macrumors.com',
-                              style:
-                                  TextStyle(fontSize: 12, color: Colors.grey),
+                              "example: ${dotenv.get('WEBPAGE_URL', fallback: 'https://www.macrumors.com')}",
+                              style: const TextStyle(
+                                  fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),

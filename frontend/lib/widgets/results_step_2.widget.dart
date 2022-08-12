@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/models/archive_info.model.dart';
-import 'package:frontend/models/crawler_address.model.dart';
 import 'package:frontend/providers/results.provider.dart';
-import 'package:frontend/services/results.services.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:syncfusion_flutter_datepicker/datepicker.dart';
@@ -30,10 +27,8 @@ class _ResultsStep2State extends State<ResultsStep2> {
   bool get _moreThanOneDay {
     final resultsProvider =
         Provider.of<ResultsProvider>(context, listen: false);
-    if (resultsProvider.latestArchiveDate
-            .difference(resultsProvider.earliestArchiveDate)
-            .inDays >
-        1) {
+    if (!resultsProvider.latestArchiveDate
+        .isSameDate(resultsProvider.earliestArchiveDate)) {
       return true;
     } else {
       return false;
