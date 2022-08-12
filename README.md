@@ -1,41 +1,58 @@
 # ptixiakiErgasia
 
-This project uses docker containers in order to fire up a DB for data storage, the crawler inside a dedicated container and an optional admin panel for the DB.
+A Website archive taking Crawler implementation compromised of the following docker containers:
+  - **Backend Rest/API** written in Python using Flask
+  - **Frontend** written in Dart using Flutter
+  - **Database** using MariaDB 
 
 ---
 
 ## Deploy
-
-> In order for the containers to work properly the following Enviromental Variables are needed to be added on a **.env** file on the project's root folder, where the run_me.sh script is found:
->
-> ```
-> WEBPAGE_URL="http://in.gr"       # The site to crawl over
-> MARIADB_IP="mariadb"             # The IP of mariaDB, 'mariadb' if using docker-compose
-> MARIADB_USER="DB_user"           # User to be used by crawler
-> MARIADB_PASSWORD="AbcD34FER$%1"  # Password for MARIADB_USER
-> MARIADB_PORT="3306"              # The mariaDB listening port
-> MARIADB_DATABASE="crawlerDB"     # The Database name to be used by crawler
-> MARIADB_ROOT_PASSWORD="changeMe" # The root user's password
-> ```
->
-> Optional Enviromental Variables:
->
-> ```
-> DEVELOP_MODE="true"              # Option to only recreate backend for faster redeployments
-> CH_LEVEL="DEBUG"                 # Logging level for console output
-> FH_LEVEL="DEBUG"                 # Logging level for file output
->
-> ```
->
-> Available logging levels are:
->
-> > CRITICAL \
-> > ERROR \
-> > WARNING \
-> > INFO \
-> > DEBUG
->
-> &nbsp;
+1. Setup [Docker](https://docs.docker.com/get-started/)
+2. Create a **.env** file on the project's root folder, alongside where the run_me.sh script is found
+3. Input following values and change as needed
+  >
+  > ```
+  > # The default site to crawl over
+  > WEBPAGE_URL="https://www.in.gr/"
+  > # The default threshold needed for an archive to be taken, 1 takes everything where 0.1 everything 90% different
+  > DIFF_THRESHOLD="0.90",
+  > # The IP of mariaDB, 'mariadb' if using docker-compose
+  > MARIADB_IP="mariadb"
+  > # User to be used by crawler
+  > MARIADB_USER="DB_user"
+  > # Password for MARIADB_USER
+  > MARIADB_PASSWORD="AbcD34FER$%1"
+  > # The mariaDB listening port
+  > MARIADB_PORT="3306"
+  > # The Database name to be used by crawler
+  > MARIADB_DATABASE="crawlerDB"
+  > # The root user's password
+  > MARIADB_ROOT_PASSWORD="changeMe"
+  > # Timezone to be used for datetime handling
+  > TIME_ZONE="Europe/Athens"
+  > ```
+  >
+  > Optional Enviromental Variables:
+  >
+  > ```
+  > # Option to only recreate backend and skip script's init questions for faster redeployments
+  > DEVELOP_MODE="true"
+  > # Logging level for console output
+  > CH_LEVEL="DEBUG"
+  > # Logging level for file output
+  > FH_LEVEL="DEBUG"
+  > ```
+  >
+  > Available logging levels are:
+  >
+  > > CRITICAL \
+  > > ERROR \
+  > > WARNING \
+  > > INFO \
+  > > DEBUG
+4. Fire up the Backend Flask server + MariaDB + Flutter Frontend using the included run_me.sh script
+5. After the containers are up and running the crawler can be accessed **through: http://<server's ip>:8080**
 
 ---
 
