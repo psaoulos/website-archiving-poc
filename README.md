@@ -1,9 +1,9 @@
 # ptixiakiErgasia
 
 A Website archive taking Crawler implementation compromised of the following docker containers:
-  - **Backend Rest/API** written in Python using Flask
-  - **Frontend** written in Dart using Flutter
-  - **Database** using MariaDB 
+  - **Backend Rest/API** written in Python using [Flask](https://flask.palletsprojects.com/)
+  - **Frontend** written in Dart using [Flutter](https://flutter.dev/)
+  - **Database** using [MariaDB](https://mariadb.com/)
 
 ---
 
