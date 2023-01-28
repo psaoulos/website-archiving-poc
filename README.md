@@ -1,4 +1,4 @@
-# ptixiakiErgasia
+# Website archiving POC
 
 A Website archive taking Crawler implementation compromised of the following docker containers:
   - **Backend Rest/API** written in Python using [Flask](https://flask.palletsprojects.com/)
